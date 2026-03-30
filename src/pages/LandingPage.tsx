@@ -6,6 +6,30 @@ import { Sparkles, Palette, BookOpen } from "lucide-react";
 const LandingPage = () => {
   const navigate = useNavigate();
 
+  const featuredBooks = [
+    {
+      title: "속삭이는 버드나무",
+      author: "사라 젠킨스",
+      pages: 24,
+      style: "마법 수채화",
+      image: "https://picsum.photos/seed/magic1/800/1000"
+    },
+    {
+      title: "구름 위의 고래",
+      author: "김민준",
+      pages: 18,
+      style: "몽환적 유화",
+      image: "https://picsum.photos/seed/magic2/800/1000"
+    },
+    {
+      title: "별빛 여우의 여행",
+      author: "이서연",
+      pages: 32,
+      style: "파스텔 일러스트",
+      image: "https://picsum.photos/seed/magic3/800/1000"
+    }
+  ];
+
   const handleCreateClick = (e: React.MouseEvent) => {
     e.preventDefault();
     const hasToken = document.cookie.split(';').some((item) => item.trim().startsWith('token='));
@@ -56,23 +80,32 @@ const LandingPage = () => {
         </motion.div>
 
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 1 }}
-          className="mt-16 md:mt-24 relative w-full max-w-5xl aspect-[16/9] rounded-3xl overflow-hidden shadow-[0px_40px_80px_rgba(39,48,87,0.15)] border-4 border-white/50"
+          className="mt-16 md:mt-24 w-full max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8"
         >
-          <img 
-            src="https://picsum.photos/seed/magic/1920/1080" 
-            alt="메인 이미지" 
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-6 md:p-12">
-            <div className="text-white text-left">
-              <h3 className="text-2xl md:text-3xl font-headline font-bold">속삭이는 버드나무</h3>
-              <p className="text-white/80 text-sm md:text-base font-body">사라 젠킨스 • 24 페이지 • 마법 수채화</p>
+          {featuredBooks.map((book, index) => (
+            <div 
+              key={index}
+              className="group relative aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 hover:-translate-y-2 transition-transform duration-300"
+            >
+              <img 
+                src={book.image} 
+                alt={book.title} 
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-8">
+                <div className="text-white text-left">
+                  <h3 className="text-xl md:text-2xl font-headline font-bold mb-1">{book.title}</h3>
+                  <p className="text-white/80 text-xs md:text-sm font-body">
+                    {book.author} • {book.pages} 페이지 • {book.style}
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
         </motion.div>
       </section>
 
