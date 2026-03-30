@@ -45,7 +45,7 @@ const Navbar = () => {
     <nav className="fixed top-0 w-full z-50 bg-background/70 backdrop-blur-xl shadow-[0px_20px_40px_rgba(39,48,87,0.06)]">
       <div className="flex justify-between items-center px-8 h-20 max-w-7xl mx-auto">
         <Link to="/" className="text-2xl font-bold text-primary font-headline tracking-tight" onClick={() => setIsMobileMenuOpen(false)}>
-          StoryMagic
+          Mongle
         </Link>
         
         {/* Desktop Nav */}
