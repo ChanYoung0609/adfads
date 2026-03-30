@@ -7,9 +7,30 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [error, setError] = React.useState("");
+
+  const validateEmail = (email: string) => {
+    return String(email)
+      .toLowerCase()
+      .match(
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      );
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
+    if (!validateEmail(email)) {
+      setError("유효한 이메일 주소를 입력해주세요.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("비밀번호는 최소 8자 이상이어야 합니다.");
+      return;
+    }
+
     // Demo: Set a mock token in cookies
     document.cookie = "token=mock_token; path=/; max-age=3600";
     navigate("/");
@@ -47,6 +68,11 @@ const LoginPage = () => {
             </div>
             
             <form onSubmit={handleLogin} className="space-y-6">
+              {error && (
+                <div className="bg-error-container/10 border border-error/20 text-error text-xs font-bold p-3 rounded-lg text-center">
+                  {error}
+                </div>
+              )}
               {/* Input: Email */}
               <div className="space-y-2">
                 <label className="block text-sm font-bold text-on-surface ml-1 font-label">이메일 또는 사용자 이름</label>
