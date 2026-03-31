@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Search, PlusCircle, Menu, X, LogIn, Compass, Library, User as UserIcon, Home } from "lucide-react";
+import { Search, BookPlus, BookOpen, Menu, X, LogIn, Compass, Library, User as UserIcon, Home } from "lucide-react";
 import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -43,8 +43,9 @@ const Navbar = () => {
     <>
       <nav className="fixed top-0 w-full z-50 bg-background border-b border-primary/5 shadow-[0px_20px_40px_rgba(39,48,87,0.06)]">
         <div className="flex justify-between items-center px-8 h-20 max-w-7xl mx-auto">
-          <Link to="/" className="text-2xl font-bold text-primary font-headline tracking-tight">
-            Mongle
+          <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-primary font-headline tracking-tight">
+            <BookOpen className="text-primary" size={28} />
+            <span>Mongle</span>
           </Link>
           
           {/* Desktop Nav */}
@@ -67,7 +68,7 @@ const Navbar = () => {
               onClick={(e) => handleProtectedClick(e, "/create")}
               className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-full font-bold transition-all active:scale-95 duration-200 flex items-center gap-2"
             >
-              <PlusCircle size={18} />
+              <BookPlus size={18} />
               동화 만들기
             </Link>
             
@@ -110,7 +111,7 @@ const Navbar = () => {
             onClick={(e) => handleProtectedClick(e, "/create")}
             className={cn("flex flex-col items-center gap-1 transition-colors", location.pathname === "/create" ? "text-primary" : "text-on-surface-variant")}
           >
-            <PlusCircle size={20} />
+            <BookPlus size={20} />
             <span className="text-[10px] font-bold">동화 만들기</span>
           </Link>
           {isLoggedIn ? (
