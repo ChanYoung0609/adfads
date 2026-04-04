@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_BASE_URL = 'https://mongle.cloud' || 'http://localhost:8080';
 
 // ── 유저 타입 ──
 
@@ -47,6 +47,7 @@ export async function logout(): Promise<void> {
     // 로그아웃 API 실패해도 로컬 토큰은 삭제
   }
   removeAccessToken();
+  clearUserCache();
 }
 
 // ── 토큰 갱신 ──
@@ -71,21 +72,37 @@ export async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
-// ── 유저 정보 조회 ──
+// ── 유저 정보 조회 (캐시) ──
 
-export async function fetchUserMe(): Promise<UserInfo | null> {
+let cachedUser: UserInfo | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5분
+
+export async function fetchUserMe(force = false): Promise<UserInfo | null> {
+  // 캐시가 유효하면 바로 반환
+  if (!force && cachedUser && Date.now() - cacheTimestamp < CACHE_TTL) {
+    return cachedUser;
+  }
+
   try {
     const res = await fetchWithAuth('/api/user/me');
     if (!res.ok) return null;
 
     const json = await res.json();
     if (json.success && json.data) {
-      return json.data as UserInfo;
+      cachedUser = json.data as UserInfo;
+      cacheTimestamp = Date.now();
+      return cachedUser;
     }
     return null;
   } catch {
     return null;
   }
+}
+
+export function clearUserCache(): void {
+  cachedUser = null;
+  cacheTimestamp = 0;
 }
 
 // ── 인증 포함 API 호출 ──

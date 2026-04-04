@@ -9,6 +9,7 @@ const OAuthCallbackPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     const accessToken = searchParams.get("accessToken");
@@ -23,19 +24,23 @@ const OAuthCallbackPage = () => {
     // 토큰 저장
     setAccessToken(accessToken);
 
-    // 축하 효과
-    confetti({
-      particleCount: 150,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: ["#6366f1", "#a855f7", "#ec4899"],
-    });
-
-    // 로그인 성공 후 홈으로 이동
-    setTimeout(() => {
+    if (isNewUser) {
+      // 신규 유저: 폭죽 + 선택 화면
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#6366f1", "#a855f7", "#ec4899"],
+      });
+      setSuccess(true);
+    } else {
+      // 기존 유저: 바로 홈으로
       navigate("/");
-    }, 2000);
+    }
   }, [searchParams, navigate]);
+
+  const goHome = () => navigate("/");
+  const goProfile = () => navigate("/profile");
 
   if (error) {
     return (
@@ -61,6 +66,8 @@ const OAuthCallbackPage = () => {
     );
   }
 
+  if (!success) return null;
+
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
       <motion.div
@@ -75,9 +82,22 @@ const OAuthCallbackPage = () => {
           <h2 className="text-3xl font-headline font-black text-on-surface mb-2">
             반가워요!
           </h2>
-          <p className="text-on-surface-variant font-medium">
-            로그인에 성공했습니다. <br /> 곧 마법의 숲으로 안내할게요.
-          </p>
+          <p className="text-on-surface-variant font-medium mb-8">로그인에 성공했습니다. <br /> 어디로 이동할까요?</p>
+
+          <div className="flex flex-col sm:flex-row gap-4 w-full">
+            <button
+              onClick={goHome}
+              className="flex-1 py-4 bg-primary text-white rounded-xl font-bold shadow-lg hover:bg-secondary transition-all"
+            >
+              홈으로
+            </button>
+            <button
+              onClick={goProfile}
+              className="flex-1 py-4 glass rounded-xl font-bold hover:bg-white transition-all text-on-surface"
+            >
+              나의 프로필로
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>
