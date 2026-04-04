@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { Camera, User, ArrowLeft, Save, Mail } from "lucide-react";
-import { fetchUserMe, fetchWithAuth, isLoggedIn, type UserInfo } from "../lib/auth";
+import { fetchUserMe, fetchWithAuth, isLoggedIn, clearUserCache, type UserInfo } from "../lib/auth";
 
 const ProfileEditPage = () => {
   const navigate = useNavigate();
@@ -36,6 +36,7 @@ const ProfileEditPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nickname: name, email }),
       });
+      clearUserCache();
       navigate("/profile");
     } catch {
       alert("저장에 실패했습니다.");
@@ -78,7 +79,7 @@ const ProfileEditPage = () => {
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative group cursor-pointer">
                   <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary shadow-xl">
-                    <img src="https://i.pravatar.cc/150?u=jang" alt="프로필" className="w-full h-full object-cover group-hover:opacity-50 transition-opacity" />
+                    <img src={profileImage || "https://i.pravatar.cc/150?u=default"} alt="프로필" className="w-full h-full object-cover group-hover:opacity-50 transition-opacity" />
                   </div>
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Camera size={32} className="text-white drop-shadow-md" />
