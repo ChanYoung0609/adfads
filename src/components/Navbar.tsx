@@ -44,8 +44,8 @@ const Navbar = () => {
       <nav className="fixed top-0 w-full z-50 bg-background border-b border-primary/5 shadow-[0px_20px_40px_rgba(39,48,87,0.06)]">
         <div className="flex justify-between items-center px-8 h-20 max-w-7xl mx-auto">
           <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-primary font-headline tracking-tight">
-            <BookOpen className="text-primary" size={28} />
-            <span>Mongle</span>
+            <BookOpen className="text-primary shrink-0" size={28} />
+            <span className="translate-y-[1px]">Mongle</span>
           </Link>
           
           {/* Desktop Nav */}

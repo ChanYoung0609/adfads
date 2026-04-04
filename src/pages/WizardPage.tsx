@@ -37,21 +37,23 @@ const WizardPage = () => {
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6 magical-gradient">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8 md:mb-12 overflow-x-auto pb-4 md:pb-0 scrollbar-hide">
+        <div className="flex items-center justify-between mb-8 md:mb-12 max-w-2xl mx-auto px-2">
           {[1, 2, 3].map(s => (
-            <div key={s} className="flex items-center gap-2 md:gap-4 flex-shrink-0">
-              <div className={cn(
-                "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold transition-all text-sm md:text-base",
-                step === s ? "bg-primary text-white scale-110 shadow-lg" : 
-                step > s ? "bg-green-500 text-white" : "glass text-on-surface-variant"
-              )}>
-                {s}
+            <React.Fragment key={s}>
+              <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
+                <div className={cn(
+                  "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold transition-all text-sm md:text-base",
+                  step === s ? "bg-primary text-white scale-110 shadow-lg" : 
+                  step > s ? "bg-green-500 text-white" : "glass text-on-surface-variant"
+                )}>
+                  {s}
+                </div>
+                <span className={cn("font-bold text-xs md:text-sm uppercase tracking-widest", step === s ? "text-primary" : "text-on-surface-variant")}>
+                  {s === 1 ? "컨셉" : s === 2 ? "스토리" : "검토"}
+                </span>
               </div>
-              <span className={cn("font-bold text-[10px] md:text-sm uppercase tracking-widest", step === s ? "text-primary" : "text-on-surface-variant")}>
-                {s === 1 ? "컨셉" : s === 2 ? "스토리" : "검토"}
-              </span>
-              {s < 3 && <div className="w-12 md:w-20 h-[2px] bg-on-surface-variant/10" />}
-            </div>
+              {s < 3 && <div className="flex-1 h-[2px] bg-on-surface-variant/20 mx-2 md:mx-6" />}
+            </React.Fragment>
           ))}
         </div>
 
