@@ -1,35 +1,18 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, Palette, BookOpen } from "lucide-react";
+import { Sparkles, Palette, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { isLoggedIn } from "../lib/auth";
+import { fetchBooks, type BookItem } from "../lib/api";
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [books, setBooks] = useState<BookItem[]>([]);
+  const sliderRef = useRef<HTMLDivElement>(null);
 
-  const featuredBooks = [
-    {
-      title: "속삭이는 버드나무",
-      author: "사라 젠킨스",
-      pages: 24,
-      style: "마법 수채화",
-      image: "https://picsum.photos/seed/magic1/800/1000"
-    },
-    {
-      title: "구름 위의 고래",
-      author: "김민준",
-      pages: 18,
-      style: "몽환적 유화",
-      image: "https://picsum.photos/seed/magic2/800/1000"
-    },
-    {
-      title: "별빛 여우의 여행",
-      author: "이서연",
-      pages: 32,
-      style: "파스텔 일러스트",
-      image: "https://picsum.photos/seed/magic3/800/1000"
-    }
-  ];
+  useEffect(() => {
+    fetchBooks(0, 10).then((data) => setBooks(data.content)).catch(() => {});
+  }, []);
 
   const handleCreateClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -42,13 +25,21 @@ const LandingPage = () => {
     }
   };
 
+  const scroll = (direction: "left" | "right") => {
+    if (!sliderRef.current) return;
+    const scrollAmount = sliderRef.current.clientWidth * 0.6;
+    sliderRef.current.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
+
   return (
     <div className="min-h-screen pt-24 magical-gradient relative overflow-hidden">
-      {/* Background Atmosphere */}
       <div className="absolute inset-0 z-0 opacity-10 pointer-events-none storybook-bg" />
 
       <section className="max-w-7xl mx-auto px-6 py-12 md:py-20 flex flex-col items-center text-center relative z-10">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -65,8 +56,8 @@ const LandingPage = () => {
             아이의 상상력이 현실이 되는 공간이에요. 몇 번의 클릭만으로 고퀄리티 일러스트와 함께 나만의 이야기를 완성해보세요.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-8">
-            <Link 
-              to="/create" 
+            <Link
+              to="/create"
               onClick={handleCreateClick}
               className="px-10 py-5 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full text-lg font-bold shadow-2xl hover:shadow-primary/30 transition-all hover:-translate-y-1 active:scale-95"
             >
@@ -78,34 +69,53 @@ const LandingPage = () => {
           </div>
         </motion.div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 1 }}
-          className="mt-16 md:mt-24 w-[calc(100%+3rem)] -mx-6 px-6 md:w-full md:mx-0 md:px-0 max-w-6xl flex overflow-x-auto snap-x snap-mandatory gap-6 pb-8 md:grid md:grid-cols-3 md:overflow-visible md:snap-none md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-        >
-          {featuredBooks.map((book, index) => (
-            <div 
-              key={index}
-              className="group relative aspect-[3/4] w-[75vw] sm:w-[50vw] md:w-auto shrink-0 snap-center rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 hover:-translate-y-2 transition-transform duration-300"
+        {books.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 1 }}
+            className="mt-16 md:mt-24 w-full max-w-6xl relative"
+          >
+            <button
+              onClick={() => scroll("left")}
+              className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur rounded-full shadow-lg flex items-center justify-center text-primary hover:bg-white hover:scale-110 transition-all"
             >
-              <img 
-                src={book.image} 
-                alt={book.title} 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-8">
-                <div className="text-white text-left">
-                  <h3 className="text-xl md:text-2xl font-headline font-bold mb-1">{book.title}</h3>
-                  <p className="text-white/80 text-xs md:text-sm font-body">
-                    {book.author} • {book.pages} 페이지 • {book.style}
-                  </p>
-                </div>
-              </div>
+              <ChevronLeft size={24} />
+            </button>
+            <button
+              onClick={() => scroll("right")}
+              className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur rounded-full shadow-lg flex items-center justify-center text-primary hover:bg-white hover:scale-110 transition-all"
+            >
+              <ChevronRight size={24} />
+            </button>
+
+            <div
+              ref={sliderRef}
+              className="flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+              {books.map((book) => (
+                <Link
+                  to={`/book/${book.bookId}`}
+                  key={book.bookId}
+                  className="group relative aspect-[3/4] w-[60vw] sm:w-[40vw] md:w-[calc((100%-5rem)/5)] shrink-0 snap-center rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 hover:-translate-y-2 transition-transform duration-300"
+                >
+                  <img
+                    src={book.coverImageUrl}
+                    alt={book.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6">
+                    <div className="text-white text-left">
+                      <h3 className="text-lg md:text-xl font-headline font-bold mb-1">{book.title}</h3>
+                      <p className="text-white/80 text-xs font-body">{book.authorName}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
-          ))}
-        </motion.div>
+          </motion.div>
+        )}
       </section>
 
       <section className="bg-surface-container-lowest py-20 md:py-32 relative z-10">
