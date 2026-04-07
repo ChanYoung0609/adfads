@@ -11,8 +11,21 @@ const LandingPage = () => {
   const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchBooks(0, 10).then((data) => setBooks(data.content)).catch(() => {});
+    fetchBooks(0, 6).then((data) => setBooks(data.content)).catch(() => {});
   }, []);
+
+  // 무한 슬라이드를 위해 아이템을 3배로 복제
+  const displayBooks = books.length > 0 ? [...books, ...books, ...books] : [];
+
+  // 초기 스크롤 위치를 중간(2번째 세트)으로 설정
+  useEffect(() => {
+    if (sliderRef.current && books.length > 0) {
+      requestAnimationFrame(() => {
+        if (!sliderRef.current) return;
+        sliderRef.current.scrollLeft = sliderRef.current.scrollWidth / 3;
+      });
+    }
+  }, [books]);
 
   const handleCreateClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -32,6 +45,19 @@ const LandingPage = () => {
       left: direction === "left" ? -scrollAmount : scrollAmount,
       behavior: "smooth",
     });
+
+    // 스크롤 애니메이션 완료 후 위치 리셋 (무한 루프 효과)
+    setTimeout(() => {
+      if (!sliderRef.current) return;
+      const { scrollLeft, scrollWidth } = sliderRef.current;
+      const sectionWidth = scrollWidth / 3;
+
+      if (scrollLeft < sectionWidth * 0.3) {
+        sliderRef.current.scrollLeft += sectionWidth;
+      } else if (scrollLeft > sectionWidth * 1.7) {
+        sliderRef.current.scrollLeft -= sectionWidth;
+      }
+    }, 500);
   };
 
   return (
@@ -93,10 +119,10 @@ const LandingPage = () => {
               ref={sliderRef}
               className="flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             >
-              {books.map((book) => (
+              {displayBooks.map((book, index) => (
                 <Link
                   to={`/book/${book.bookId}`}
-                  key={book.bookId}
+                  key={`${book.bookId}-${index}`}
                   className="group relative aspect-[3/4] w-[60vw] sm:w-[40vw] md:w-[calc((100%-3.75rem)/4)] shrink-0 snap-center rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 hover:-translate-y-2 transition-transform duration-300"
                 >
                   <img

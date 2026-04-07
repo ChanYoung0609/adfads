@@ -16,7 +16,15 @@ const Navbar = () => {
     const loggedIn = checkAuth();
     setIsLoggedIn(loggedIn);
     if (loggedIn) {
-      fetchUserMe().then(setUser);
+      fetchUserMe().then((info) => {
+        if (info) {
+          setUser(info);
+        } else {
+          // 토큰이 만료/무효 → 로그아웃 처리
+          setIsLoggedIn(false);
+          setUser(null);
+        }
+      });
     } else {
       setUser(null);
     }
