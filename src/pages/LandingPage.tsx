@@ -1,61 +1,21 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, Palette, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, Palette, BookOpen, Flame, Clock3 } from "lucide-react";
 import { fetchBooks, type BookItem } from "../lib/api";
 
 const LandingPage = () => {
   const [books, setBooks] = useState<BookItem[]>([]);
-  const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchBooks(0, 6)
+    fetchBooks(0, 8)
       .then((data) => setBooks(data.content))
       .catch(() => {});
   }, []);
 
-  const displayBooks = books.length > 0 ? [...books, ...books, ...books] : [];
-
-  useEffect(() => {
-    const slider = sliderRef.current;
-    if (!slider || books.length === 0) return;
-    slider.scrollLeft = slider.scrollWidth / 3;
-  }, [books]);
-
-  useEffect(() => {
-    const slider = sliderRef.current;
-    if (!slider || books.length === 0) return;
-
-    let timeout: ReturnType<typeof setTimeout>;
-    const onScrollEnd = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        const { scrollLeft, scrollWidth } = slider;
-        const section = scrollWidth / 3;
-
-        if (scrollLeft < section * 0.5) {
-          slider.scrollLeft += section;
-        } else if (scrollLeft > section * 1.5) {
-          slider.scrollLeft -= section;
-        }
-      }, 80);
-    };
-
-    slider.addEventListener("scroll", onScrollEnd);
-    return () => {
-      slider.removeEventListener("scroll", onScrollEnd);
-      clearTimeout(timeout);
-    };
-  }, [books]);
-
-  const scroll = (direction: "left" | "right") => {
-    if (!sliderRef.current) return;
-    const scrollAmount = sliderRef.current.clientWidth * 0.6;
-    sliderRef.current.scrollBy({
-      left: direction === "left" ? -scrollAmount : scrollAmount,
-      behavior: "smooth",
-    });
-  };
+  const latestBooks = useMemo(() => books.slice(0, 6), [books]);
+  // 인기 지표가 API 응답에 없어 임시로 최신 목록 역순을 사용
+  const popularBooks = useMemo(() => [...books].reverse().slice(0, 6), [books]);
 
   return (
     <div className="min-h-screen pt-24 magical-gradient relative overflow-hidden">
@@ -98,45 +58,66 @@ const LandingPage = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 1 }}
-            className="mt-16 md:mt-24 w-full max-w-6xl relative"
+            className="mt-16 md:mt-24 w-full max-w-6xl"
           >
-            <button
-              onClick={() => scroll("left")}
-              className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-transparent rounded-full flex items-center justify-center text-primary/30 hover:bg-white/90 hover:shadow-lg hover:text-primary hover:scale-110 transition-all"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-transparent rounded-full flex items-center justify-center text-primary/30 hover:bg-white/90 hover:shadow-lg hover:text-primary hover:scale-110 transition-all"
-            >
-              <ChevronRight size={24} />
-            </button>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+              <div className="rounded-3xl bg-white/75 backdrop-blur-sm border border-white/60 p-4 md:p-5 space-y-4">
+                <div className="flex items-center gap-2 text-primary font-bold text-sm md:text-base">
+                  <Clock3 size={18} />
+                  최신순
+                </div>
+                <div className="space-y-3">
+                  {latestBooks.map((book) => (
+                    <Link
+                      key={`latest-${book.bookId}`}
+                      to={`/book/${book.bookId}`}
+                      className="group flex items-center gap-3 rounded-2xl p-2 md:p-3 hover:bg-white/90 transition-colors"
+                    >
+                      <div className="w-16 md:w-20 aspect-[3/4] rounded-xl overflow-hidden shadow-md flex-shrink-0">
+                        <img
+                          src={book.coverImageUrl}
+                          alt={book.title}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div className="min-w-0 text-left">
+                        <h3 className="font-bold text-on-surface truncate group-hover:text-primary transition-colors">{book.title}</h3>
+                        <p className="text-xs md:text-sm text-on-surface-variant">{book.authorName} 작가</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
 
-            <div
-              ref={sliderRef}
-              className="flex gap-5 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-            >
-              {displayBooks.map((book, index) => (
-                <Link
-                  to={`/book/${book.bookId}`}
-                  key={`${book.bookId}-${index}`}
-                  className="group relative aspect-[3/4] w-[60vw] sm:w-[40vw] md:w-[calc((100%-2.5rem)/3)] shrink-0 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 hover:-translate-y-2 transition-transform duration-300"
-                >
-                  <img
-                    src={book.coverImageUrl}
-                    alt={book.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6">
-                    <div className="text-white text-left">
-                      <h3 className="text-lg md:text-xl font-headline font-bold mb-1">{book.title}</h3>
-                      <p className="text-white/80 text-xs font-body">{book.authorName}</p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+              <div className="rounded-3xl bg-white/75 backdrop-blur-sm border border-white/60 p-4 md:p-5 space-y-4">
+                <div className="flex items-center gap-2 text-secondary font-bold text-sm md:text-base">
+                  <Flame size={18} />
+                  인기순
+                </div>
+                <div className="space-y-3">
+                  {popularBooks.map((book) => (
+                    <Link
+                      key={`popular-${book.bookId}`}
+                      to={`/book/${book.bookId}`}
+                      className="group flex items-center gap-3 rounded-2xl p-2 md:p-3 hover:bg-white/90 transition-colors"
+                    >
+                      <div className="w-16 md:w-20 aspect-[3/4] rounded-xl overflow-hidden shadow-md flex-shrink-0">
+                        <img
+                          src={book.coverImageUrl}
+                          alt={book.title}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div className="min-w-0 text-left">
+                        <h3 className="font-bold text-on-surface truncate group-hover:text-secondary transition-colors">{book.title}</h3>
+                        <p className="text-xs md:text-sm text-on-surface-variant">{book.authorName} 작가</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
