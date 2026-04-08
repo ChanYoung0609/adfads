@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { BookOpen, Search, SlidersHorizontal, X } from "lucide-react";
+import { BookOpen, Search, SlidersHorizontal, X, Heart } from "lucide-react";
 import { fetchBooks, type BookItem } from "../lib/api";
 
 const PAGE_SIZE = 4;
 type SortOption = "newest" | "titleAsc" | "titleDesc";
+
+type LikedMap = Record<string, boolean>;
 
 const GalleryPage = () => {
   const [books, setBooks] = useState<BookItem[]>([]);
@@ -15,6 +17,7 @@ const GalleryPage = () => {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortOption>("newest");
   const [showFilters, setShowFilters] = useState(false);
+  const [likedMap, setLikedMap] = useState<LikedMap>({});
   const observerRef = useRef<HTMLDivElement>(null);
 
   const loadMore = useCallback(async () => {
@@ -26,7 +29,7 @@ const GalleryPage = () => {
       setHasMore(!data.last);
       setPage((prev) => prev + 1);
     } catch {
-      // Stop infinite loading when API fails.
+      // API 실패 시 더 이상 로드하지 않음
       setHasMore(false);
     } finally {
       setLoading(false);
@@ -75,16 +78,20 @@ const GalleryPage = () => {
 
   const isSearching = query.trim().length > 0;
 
+  const toggleLike = (bookId: string) => {
+    setLikedMap((prev) => ({ ...prev, [bookId]: !prev[bookId] }));
+  };
+
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6">
       <div className="max-w-7xl mx-auto space-y-8 md:space-y-12">
         <div className="space-y-4">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-headline font-extrabold leading-tight tracking-tight text-on-surface">
-            Infinite stories, <br />
-            <span className="text-primary italic">one page at a time</span>
+            무한한 세계, <br />
+            <span className="text-primary italic">한 페이지씩</span> 완성돼요
           </h1>
           <p className="text-on-surface-variant text-base md:text-lg max-w-xl">
-            Explore community-made AI stories, from fairy tales to magical adventures.
+            우리 커뮤니티가 만든 AI 생성 이야기를 만나보세요. 깊은 우주부터 마법의 숲까지 준비되어 있어요.
           </p>
         </div>
 
@@ -94,7 +101,7 @@ const GalleryPage = () => {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by title or author"
+              placeholder="제목, 작가 검색..."
               className="flex-grow bg-transparent outline-none text-on-surface text-base md:text-lg placeholder:text-on-surface-variant/50 font-body min-w-0"
             />
             {query && (
@@ -102,7 +109,7 @@ const GalleryPage = () => {
                 type="button"
                 onClick={() => setQuery("")}
                 className="text-on-surface-variant hover:text-on-surface p-1"
-                aria-label="Clear search"
+                aria-label="검색어 지우기"
               >
                 <X size={18} />
               </button>
@@ -115,7 +122,7 @@ const GalleryPage = () => {
                   ? "bg-primary text-on-primary"
                   : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
               }`}
-              aria-label="Toggle sort options"
+              aria-label="정렬 옵션 열기"
             >
               <SlidersHorizontal size={18} />
             </button>
@@ -127,12 +134,12 @@ const GalleryPage = () => {
               animate={{ opacity: 1, height: "auto" }}
               className="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 p-4 md:p-6 space-y-3"
             >
-              <p className="text-sm font-bold text-on-surface">Sort</p>
+              <p className="text-sm font-bold text-on-surface">정렬</p>
               <div className="flex flex-wrap gap-2">
                 {([
-                  { value: "newest", label: "Newest" },
-                  { value: "titleAsc", label: "Title A-Z" },
-                  { value: "titleDesc", label: "Title Z-A" },
+                  { value: "newest", label: "최신순" },
+                  { value: "titleAsc", label: "제목 오름차순" },
+                  { value: "titleDesc", label: "제목 내림차순" },
                 ] as const).map((opt) => (
                   <button
                     key={opt.value}
@@ -151,43 +158,64 @@ const GalleryPage = () => {
           )}
 
           <p className="text-sm text-on-surface-variant">
-            {isSearching ? `Results for \"${query}\"` : "All stories"} ({visibleBooks.length})
+            {isSearching ? `\"${query}\" 검색 결과` : "전체 작품"} ({visibleBooks.length}개)
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-          {visibleBooks.map((book, i) => (
-            <motion.div
-              key={book.bookId}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: (i % PAGE_SIZE) * 0.1 }}
-              className="group cursor-pointer"
-            >
-              <Link to={`/book/${book.bookId}`} className="flex flex-row sm:flex-col gap-4 sm:gap-0">
-                <div className="relative w-1/3 sm:w-full aspect-[3/4] rounded-2xl overflow-hidden book-shadow sm:mb-4 group-hover:-translate-y-2 transition-transform duration-500 flex-shrink-0">
-                  <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
-                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary scale-0 group-hover:scale-100 transition-transform duration-500">
-                      <BookOpen size={32} />
+          {visibleBooks.map((book, i) => {
+            const liked = likedMap[book.bookId] ?? false;
+            return (
+              <motion.div
+                key={book.bookId}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: (i % PAGE_SIZE) * 0.1 }}
+                className="group cursor-pointer"
+              >
+                <Link to={`/book/${book.bookId}`} className="flex flex-row sm:flex-col gap-4 sm:gap-0">
+                  <div className="relative w-1/3 sm:w-full aspect-[3/4] rounded-2xl overflow-hidden book-shadow sm:mb-4 group-hover:-translate-y-2 transition-transform duration-500 flex-shrink-0">
+                    <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleLike(book.bookId);
+                      }}
+                      className={`absolute right-2 bottom-2 z-20 w-10 h-10 rounded-full flex items-center justify-center border backdrop-blur-sm transition-all ${
+                        liked
+                          ? "bg-rose-500/95 border-rose-400 text-white"
+                          : "bg-white/90 border-white text-rose-500 hover:bg-white"
+                      }`}
+                      aria-label={liked ? "좋아요 취소" : "좋아요"}
+                    >
+                      <Heart size={18} className={liked ? "fill-current" : ""} />
+                    </button>
+
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary scale-0 group-hover:scale-100 transition-transform duration-500">
+                        <BookOpen size={32} />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex flex-col justify-center sm:justify-start flex-grow min-w-0">
-                  <h3 className="text-base sm:text-lg md:text-xl font-bold group-hover:text-primary transition-colors truncate sm:whitespace-normal">{book.title}</h3>
-                  <p className="text-on-surface-variant text-xs sm:text-sm font-medium">{book.authorName}</p>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                  <div className="flex flex-col justify-center sm:justify-start flex-grow min-w-0">
+                    <h3 className="text-base sm:text-lg md:text-xl font-bold group-hover:text-primary transition-colors truncate sm:whitespace-normal">{book.title}</h3>
+                    <p className="text-on-surface-variant text-xs sm:text-sm font-medium">{book.authorName} 작가</p>
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
 
         {visibleBooks.length === 0 && !loading && (
           <div className="text-center py-16 space-y-3">
             <Search size={44} className="mx-auto text-on-surface-variant/30" />
-            <p className="text-on-surface-variant text-lg">No results found.</p>
-            <p className="text-on-surface-variant/70 text-sm">Try a different keyword.</p>
+            <p className="text-on-surface-variant text-lg">검색 결과가 없습니다.</p>
+            <p className="text-on-surface-variant/70 text-sm">다른 키워드로 검색해보세요.</p>
           </div>
         )}
 
@@ -197,7 +225,7 @@ const GalleryPage = () => {
 
         {isSearching && hasMore && (
           <p className="text-center text-xs text-on-surface-variant/70">
-            More books are loading. Search results can increase as more pages arrive.
+            다음 페이지를 불러오는 중입니다. 검색 결과는 더 늘어날 수 있어요.
           </p>
         )}
       </div>

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, BookOpen, Users } from "lucide-react";
+import { Sparkles, BookOpen, Users, Flag, X } from "lucide-react";
 import { fetchBookDetail, type BookDetail } from "../lib/api";
+
+const reportReasons = ["Ω∫∆‘/±§∞Ì", "∫Œ¿˚¿˝«— ≥ªøÎ", "¿˙¿€±« ƒß«ÿ", "±‚≈∏"] as const;
 
 const BookDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -10,14 +12,32 @@ const BookDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState<(typeof reportReasons)[number]>("Ω∫∆‘/±§∞Ì");
+  const [reportDetail, setReportDetail] = useState("");
+  const [reportDone, setReportDone] = useState(false);
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     fetchBookDetail(id)
-      .then((data) => setBook(data))
+      .then((data) => {
+        setBook(data);
+        setError(false);
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const handleSubmitReport = (e: React.FormEvent) => {
+    e.preventDefault();
+    // «ˆ¿Á¥¬ UI ¡¶√‚∏∏ √≥∏Æ«’¥œ¥Ÿ.
+    setIsReportOpen(false);
+    setReportDone(true);
+    setReportDetail("");
+    setReportReason("Ω∫∆‘/±§∞Ì");
+    window.setTimeout(() => setReportDone(false), 2500);
+  };
 
   if (loading) {
     return (
@@ -30,149 +50,214 @@ const BookDetailPage = () => {
   if (error || !book) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-on-surface-variant text-lg">Ï±ÖÏùÑ Ï∞æÏùÑ Ïàò ÏóÜÏäµÎãàÎã§.</p>
+        <p className="text-on-surface-variant text-lg">√•¿ª √£¿ª ºˆ æ¯Ω¿¥œ¥Ÿ.</p>
         <Link to="/explore" className="text-primary font-bold hover:underline">
-          Î™©Î°ùÏúºÎ°ú ÎèåÏïÑÍ∞ÄÍ∏∞
+          ∏Ò∑œ¿∏∑Œ µπæ∆∞°±‚
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-[380px_1fr] gap-6 md:gap-16 items-start">
-          {/* Left Column (Desktop) / Top Header (Mobile) */}
-          <div className="md:sticky md:top-32 space-y-4 md:space-y-8">
-            <div className="flex flex-row md:flex-col gap-5 md:gap-8 items-start">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="w-[150px] md:w-full aspect-[3/4] rounded-2xl md:rounded-3xl overflow-hidden book-shadow flex-shrink-0"
-              >
-                <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              </motion.div>
-
-              {/* Mobile Title & Author Info */}
-              <div className="flex-grow md:hidden pt-1">
-                <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-[11px] mb-2">
-                  <Sparkles size={14} />
-                  AI Í∑∏Î¶ºÏ±Ö
-                </div>
-                <h1 className="text-3xl font-display font-bold leading-tight mb-2">{book.title}</h1>
-                <p className="text-on-surface-variant text-base font-medium mb-2">{book.authorName} ÏûëÍ∞Ä</p>
-                <div className="flex items-center gap-1.5 text-on-surface-variant">
-                  <BookOpen size={16} />
-                  <span className="text-sm font-medium">{book.pages.length} ÌéòÏù¥ÏßÄ</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Desktop Buttons */}
-            <div className="hidden md:flex flex-col gap-4">
-              <Link to={`/read/${book.bookId}`} className="w-full bg-primary text-white py-4 md:py-5 rounded-2xl text-center font-bold text-lg shadow-xl hover:bg-secondary transition-all active:scale-95">
-                Ïù¥ÏïºÍ∏∞ ÏùΩÍ∏∞
-              </Link>
-            </div>
+    <>
+      <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6">
+        <div className="max-w-6xl mx-auto space-y-4">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setIsReportOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-red-300 bg-red-50 text-red-600 font-bold hover:bg-red-100 transition-colors"
+            >
+              <Flag size={16} />
+              Ω≈∞Ì
+            </button>
           </div>
 
-          {/* Right Column (Desktop) / Main Content (Mobile) */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6 md:space-y-10"
-          >
-            {/* Desktop Title Header */}
-            <div className="hidden md:block space-y-4">
-              <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-sm">
-                <Sparkles size={16} />
-                AI Í∑∏Î¶ºÏ±Ö
-              </div>
-              <h1 className="text-6xl font-display font-bold leading-tight">{book.title}</h1>
-              <div className="flex items-center gap-4">
-                <span className="font-bold">{book.authorName} ÏûëÍ∞Ä</span>
-                <div className="h-4 w-[1px] bg-on-surface-variant/20" />
-                <div className="flex items-center gap-1.5 text-on-surface-variant">
-                  <BookOpen size={18} />
-                  <span className="font-medium">{book.pages.length} ÌéòÏù¥ÏßÄ</span>
+          {reportDone && (
+            <div className="rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary font-bold">
+              Ω≈∞Ì∞° ¡¢ºˆµ«æ˙Ω¿¥œ¥Ÿ. ∞À≈‰ »ƒ ¡∂ƒ°«“∞‘ø‰.
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-[380px_1fr] gap-6 md:gap-16 items-start">
+            <div className="md:sticky md:top-32 space-y-4 md:space-y-8">
+              <div className="flex flex-row md:flex-col gap-5 md:gap-8 items-start">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="w-[150px] md:w-full aspect-[3/4] rounded-2xl md:rounded-3xl overflow-hidden book-shadow flex-shrink-0"
+                >
+                  <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                </motion.div>
+
+                <div className="flex-grow md:hidden pt-1">
+                  <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-[11px] mb-2">
+                    <Sparkles size={14} />
+                    AI ±◊∏≤√•
+                  </div>
+                  <h1 className="text-3xl font-display font-bold leading-tight mb-2">{book.title}</h1>
+                  <p className="text-on-surface-variant text-base font-medium mb-2">{book.authorName} ¿€∞°</p>
+                  <div className="flex items-center gap-1.5 text-on-surface-variant">
+                    <BookOpen size={16} />
+                    <span className="text-sm font-medium">{book.pages.length} ∆‰¿Ã¡ˆ</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Mobile Buttons (Full Width) */}
-            <div className="flex flex-col gap-3 md:hidden">
-              <Link to={`/read/${book.bookId}`} className="w-full bg-primary text-white py-4 rounded-xl text-center font-bold text-lg shadow-lg active:scale-95">
-                Ïù¥ÏïºÍ∏∞ ÏùΩÍ∏∞
-              </Link>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-3 md:gap-4">
-              <div className="glass p-3 md:p-4 rounded-xl md:rounded-2xl text-center">
-                <p className="text-[10px] md:text-xs font-bold text-on-surface-variant uppercase mb-1">Î∂ÑÎüâ</p>
-                <p className="font-bold text-sm md:text-base">{book.pages.length} ÌéòÏù¥ÏßÄ</p>
-              </div>
-              <div className="glass p-3 md:p-4 rounded-xl md:rounded-2xl text-center">
-                <p className="text-[10px] md:text-xs font-bold text-on-surface-variant uppercase mb-1">Îì±Ïû•Ïù∏Î¨º</p>
-                <p className="font-bold text-sm md:text-base">{book.characters.length}Î™Ö</p>
-              </div>
-              <div className="glass p-3 md:p-4 rounded-xl md:rounded-2xl text-center">
-                <p className="text-[10px] md:text-xs font-bold text-on-surface-variant uppercase mb-1">ÌòïÏãù</p>
-                <p className="font-bold text-sm md:text-base">ÎîîÏßÄÌÑ∏</p>
+              <div className="hidden md:flex flex-col gap-4">
+                <Link to={`/read/${book.bookId}`} className="w-full bg-primary text-white py-4 md:py-5 rounded-2xl text-center font-bold text-lg shadow-xl hover:bg-secondary transition-all active:scale-95">
+                  ¿Ãæﬂ±‚ ¿–±‚
+                </Link>
               </div>
             </div>
 
-            {/* Introduction */}
-            <div className="space-y-3 md:space-y-4">
-              <h3 className="text-xl md:text-2xl font-bold">Ïù¥ÏïºÍ∏∞ ÏÜåÍ∞úÏòàÏöî</h3>
-              <p className="text-on-surface-variant leading-relaxed text-base md:text-lg">
-                {book.description}
-              </p>
-            </div>
-
-            {/* Characters */}
-            {book.characters.length > 0 && (
-              <div className="space-y-4 pt-8 border-t border-on-surface-variant/10">
-                <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2">
-                  <Users size={22} />
-                  Îì±Ïû•Ïù∏Î¨º
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {book.characters.map((character, i) => (
-                    <div key={i} className="glass p-4 md:p-5 rounded-2xl space-y-2">
-                      <p className="font-bold text-base md:text-lg">{character.name}</p>
-                      <p className="text-on-surface-variant text-sm md:text-base leading-relaxed">{character.description}</p>
-                    </div>
-                  ))}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-6 md:space-y-10"
+            >
+              <div className="hidden md:block space-y-4">
+                <div className="flex items-center gap-2 text-primary font-bold uppercase tracking-widest text-sm">
+                  <Sparkles size={16} />
+                  AI ±◊∏≤√•
+                </div>
+                <h1 className="text-6xl font-display font-bold leading-tight">{book.title}</h1>
+                <div className="flex items-center gap-4">
+                  <span className="font-bold">{book.authorName} ¿€∞°</span>
+                  <div className="h-4 w-[1px] bg-on-surface-variant/20" />
+                  <div className="flex items-center gap-1.5 text-on-surface-variant">
+                    <BookOpen size={18} />
+                    <span className="font-medium">{book.pages.length} ∆‰¿Ã¡ˆ</span>
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Pages Preview */}
-            {book.pages.length > 0 && (
-              <div className="space-y-4 pt-8 border-t border-on-surface-variant/10">
-                <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2">
-                  <BookOpen size={22} />
-                  ÎØ∏Î¶¨Î≥¥Í∏∞
-                </h3>
-                <div className="space-y-4">
-                  {book.pages.map((page) => (
-                    <div key={page.pageNumber} className="glass p-4 md:p-6 rounded-2xl space-y-2">
-                      <p className="text-xs font-bold text-primary uppercase">
-                        {page.pageNumber} ÌéòÏù¥ÏßÄ
-                      </p>
-                      <p className="text-on-surface-variant leading-relaxed text-sm md:text-base">
-                        {page.content}
-                      </p>
-                    </div>
-                  ))}
+              <div className="flex flex-col gap-3 md:hidden">
+                <Link to={`/read/${book.bookId}`} className="w-full bg-primary text-white py-4 rounded-xl text-center font-bold text-lg shadow-lg active:scale-95">
+                  ¿Ãæﬂ±‚ ¿–±‚
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 md:gap-4">
+                <div className="glass p-3 md:p-4 rounded-xl md:rounded-2xl text-center">
+                  <p className="text-[10px] md:text-xs font-bold text-on-surface-variant uppercase mb-1">∫–∑Æ</p>
+                  <p className="font-bold text-sm md:text-base">{book.pages.length} ∆‰¿Ã¡ˆ</p>
+                </div>
+                <div className="glass p-3 md:p-4 rounded-xl md:rounded-2xl text-center">
+                  <p className="text-[10px] md:text-xs font-bold text-on-surface-variant uppercase mb-1">µÓ¿Â¿Œπ∞</p>
+                  <p className="font-bold text-sm md:text-base">{book.characters.length}∏Ì</p>
+                </div>
+                <div className="glass p-3 md:p-4 rounded-xl md:rounded-2xl text-center">
+                  <p className="text-[10px] md:text-xs font-bold text-on-surface-variant uppercase mb-1">«¸Ωƒ</p>
+                  <p className="font-bold text-sm md:text-base">ºº∑Œ«¸</p>
                 </div>
               </div>
-            )}
-          </motion.div>
+
+              <div className="space-y-3 md:space-y-4">
+                <h3 className="text-xl md:text-2xl font-bold">¿Ãæﬂ±‚ º“∞≥</h3>
+                <p className="text-on-surface-variant leading-relaxed text-base md:text-lg">{book.description}</p>
+              </div>
+
+              {book.characters.length > 0 && (
+                <div className="space-y-4 pt-8 border-t border-on-surface-variant/10">
+                  <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+                    <Users size={22} />
+                    µÓ¿Â¿Œπ∞
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {book.characters.map((character, i) => (
+                      <div key={i} className="glass p-4 md:p-5 rounded-2xl space-y-2">
+                        <p className="font-bold text-base md:text-lg">{character.name}</p>
+                        <p className="text-on-surface-variant text-sm md:text-base leading-relaxed">{character.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {book.pages.length > 0 && (
+                <div className="space-y-4 pt-8 border-t border-on-surface-variant/10">
+                  <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+                    <BookOpen size={22} />
+                    πÃ∏Æ∫∏±‚
+                  </h3>
+                  <div className="space-y-4">
+                    {book.pages.map((page) => (
+                      <div key={page.pageNumber} className="glass p-4 md:p-6 rounded-2xl space-y-2">
+                        <p className="text-xs font-bold text-primary uppercase">{page.pageNumber} ∆‰¿Ã¡ˆ</p>
+                        <p className="text-on-surface-variant leading-relaxed text-sm md:text-base">{page.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </div>
         </div>
       </div>
-    </div>
+
+      {isReportOpen && (
+        <div className="fixed inset-0 z-[90] bg-black/55 px-4 flex items-center justify-center" onClick={() => setIsReportOpen(false)}>
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-on-surface">¿€«∞ Ω≈∞Ì</h2>
+              <button type="button" onClick={() => setIsReportOpen(false)} className="text-on-surface-variant hover:text-on-surface">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitReport} className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm font-bold text-on-surface">Ω≈∞Ì ªÁ¿Ø</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {reportReasons.map((reason) => (
+                    <button
+                      key={reason}
+                      type="button"
+                      onClick={() => setReportReason(reason)}
+                      className={`px-3 py-2 rounded-lg text-sm font-bold border transition-colors ${
+                        reportReason === reason
+                          ? "bg-red-100 border-red-300 text-red-700"
+                          : "bg-surface-container-lowest border-outline-variant/30 text-on-surface-variant hover:bg-surface-container"
+                      }`}
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="report-detail" className="text-sm font-bold text-on-surface">
+                  ªÛºº ≥ªøÎ
+                </label>
+                <textarea
+                  id="report-detail"
+                  value={reportDetail}
+                  onChange={(e) => setReportDetail(e.target.value)}
+                  rows={4}
+                  placeholder="Ω≈∞Ì ≥ªøÎ¿ª ¿‘∑¬«ÿ¡÷ººø‰."
+                  className="w-full px-3 py-2 rounded-lg border border-outline-variant/40 focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsReportOpen(false)}
+                  className="flex-1 py-3 rounded-xl border border-outline-variant/40 text-on-surface-variant font-bold hover:bg-surface-container-low"
+                >
+                  √Îº“
+                </button>
+                <button type="submit" className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700">
+                  Ω≈∞Ì ¡¢ºˆ
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
