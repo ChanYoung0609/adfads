@@ -42,7 +42,7 @@ const AuthorDashboardPage = () => {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-3xl md:text-5xl font-headline font-extrabold text-on-surface">작가 대시보드</h1>
+            <h1 className="text-3xl md:text-5xl font-headline font-extrabold text-on-surface">작가로써의 활동기록</h1>
             <p className="text-on-surface-variant text-sm md:text-base">작품 성과와 수익을 확인하세요.</p>
           </div>
         </div>
