@@ -1,8 +1,9 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { Sparkles, Palette, BookOpen, Flame, Clock3, ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchBooks, type BookItem } from "../lib/api";
+import { isLoggedIn } from "../lib/auth";
 
 type SliderSectionProps = {
   title: string;
@@ -112,6 +113,7 @@ const SliderSection = ({ title, icon, books, accentClass }: SliderSectionProps) 
 
 const LandingPage = () => {
   const [books, setBooks] = useState<BookItem[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchBooks(0, 8)
@@ -121,6 +123,14 @@ const LandingPage = () => {
 
   const latestBooks = useMemo(() => books.slice(0, 8), [books]);
   const popularBooks = useMemo(() => [...books].reverse().slice(0, 8), [books]);
+
+  const handleStartClick = () => {
+    if (isLoggedIn()) {
+      navigate("/start");
+      return;
+    }
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen pt-24 magical-gradient relative overflow-hidden">
@@ -149,12 +159,13 @@ const LandingPage = () => {
           </p>
 
           <div className="pt-8">
-            <Link
-              to="/start"
+            <button
+              type="button"
+              onClick={handleStartClick}
               className="inline-flex px-10 py-5 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full text-lg font-bold shadow-2xl hover:shadow-primary/30 transition-all hover:-translate-y-1 active:scale-95"
             >
               지금 시작하기
-            </Link>
+            </button>
           </div>
         </motion.div>
 
