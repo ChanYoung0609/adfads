@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Components
@@ -21,12 +21,8 @@ import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import UnderConstructionPage from "./pages/UnderConstructionPage";
 import AboutPage from "./pages/AboutPage";
 import HomePage from "./pages/HomePage";
-import DashboardPage from "./pages/DashboardPage";
-import AuthorDashboardPage from "./pages/AuthorDashboardPage";
-import ReaderDashboardPage from "./pages/ReaderDashboardPage";
 import ReportPage from "./pages/ReportPage";
-
-// --- Main App ---
+import StartPage from "./pages/StartPage";
 
 export default function App() {
   return (
@@ -37,12 +33,10 @@ export default function App() {
         <main className="flex-grow pb-24 md:pb-0">
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/start" element={<StartPage />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/explore" element={<GalleryPage />} />
             <Route path="/search" element={<GalleryPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/dashboard/author" element={<AuthorDashboardPage />} />
-            <Route path="/dashboard/reader" element={<ReaderDashboardPage />} />
             <Route path="/report" element={<ReportPage />} />
             <Route path="/book/:id" element={<BookDetailPage />} />
             <Route path="/read/:id" element={<ReadingPage />} />

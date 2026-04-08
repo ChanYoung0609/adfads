@@ -6,7 +6,6 @@ import { fetchBooks, type BookItem } from "../lib/api";
 
 const LandingPage = () => {
   const [books, setBooks] = useState<BookItem[]>([]);
-  const [showRoleSelector, setShowRoleSelector] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -84,38 +83,13 @@ const LandingPage = () => {
             아이디어만 있다면 누구나 몇 번의 클릭으로 일러스트와 이야기를 완성할 수 있어요.
           </p>
 
-          <div className="pt-8 space-y-4 w-full">
-            <button
-              type="button"
-              onClick={() => setShowRoleSelector((prev) => !prev)}
-              className="px-10 py-5 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full text-lg font-bold shadow-2xl hover:shadow-primary/30 transition-all hover:-translate-y-1 active:scale-95"
+          <div className="pt-8">
+            <Link
+              to="/start"
+              className="inline-flex px-10 py-5 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full text-lg font-bold shadow-2xl hover:shadow-primary/30 transition-all hover:-translate-y-1 active:scale-95"
             >
               지금 시작하기
-            </button>
-
-            {showRoleSelector && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-4"
-              >
-                <p className="text-sm md:text-base text-on-surface-variant font-bold">어떤 방식으로 시작할까요?</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl mx-auto">
-                  <Link
-                    to="/dashboard/author"
-                    className="px-8 py-5 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-on-primary text-lg font-bold shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-1 active:scale-95"
-                  >
-                    작가로 시작하기
-                  </Link>
-                  <Link
-                    to="/dashboard/reader"
-                    className="px-8 py-5 rounded-2xl border-2 border-primary/20 bg-white/80 text-on-surface text-lg font-bold hover:bg-white transition-all hover:-translate-y-1 active:scale-95"
-                  >
-                    독자로 시작하기
-                  </Link>
-                </div>
-              </motion.div>
-            )}
+            </Link>
           </div>
         </motion.div>
 
