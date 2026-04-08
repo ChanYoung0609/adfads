@@ -47,11 +47,11 @@ const ReaderDashboardPage = () => {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* 헤더 */}
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate("/dashboard")} className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-colors">
+          <button onClick={() => navigate("/home")} className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-colors">
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-3xl md:text-5xl font-headline font-extrabold text-on-surface">리더 대시보드</h1>
+            <h1 className="text-3xl md:text-5xl font-headline font-extrabold text-on-surface">독자 대시보드</h1>
             <p className="text-on-surface-variant text-sm md:text-base">읽기 기록과 진행률을 확인하세요.</p>
           </div>
         </div>
