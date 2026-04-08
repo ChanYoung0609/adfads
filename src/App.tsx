@@ -20,6 +20,12 @@ import SignUpPage from "./pages/SignUpPage";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import UnderConstructionPage from "./pages/UnderConstructionPage";
 import AboutPage from "./pages/AboutPage";
+import HomePage from "./pages/HomePage";
+import DashboardPage from "./pages/DashboardPage";
+import AuthorDashboardPage from "./pages/AuthorDashboardPage";
+import ReaderDashboardPage from "./pages/ReaderDashboardPage";
+import SearchPage from "./pages/SearchPage";
+import ReportPage from "./pages/ReportPage";
 
 // --- Main App ---
 
@@ -32,7 +38,13 @@ export default function App() {
         <main className="flex-grow pb-24 md:pb-0">
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/home" element={<HomePage />} />
             <Route path="/explore" element={<GalleryPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/dashboard/author" element={<AuthorDashboardPage />} />
+            <Route path="/dashboard/reader" element={<ReaderDashboardPage />} />
+            <Route path="/report" element={<ReportPage />} />
             <Route path="/book/:id" element={<BookDetailPage />} />
             <Route path="/read/:id" element={<ReadingPage />} />
             <Route path="/create" element={<WizardPage />} />
