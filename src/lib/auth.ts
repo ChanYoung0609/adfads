@@ -107,6 +107,50 @@ export function clearUserCache(): void {
   cacheTimestamp = 0;
 }
 
+// ── 프로필 수정 ──
+
+export interface ProfileUpdateRequest {
+  nickname: string;
+  email: string;
+  profileImage: string;
+}
+
+/**
+ * PATCH /api/user/profile — 닉네임/이메일/프로필 이미지를 한 번에 수정.
+ * 성공 시 서버에서 갱신된 UserInfo를 반환하고 로컬 캐시도 갱신한다.
+ *
+ * 에러 매핑:
+ * - 409 (USER_002): 이메일 중복
+ * - 404 (USER_001): 사용자 없음
+ */
+export async function updateUserProfile(request: ProfileUpdateRequest): Promise<UserInfo> {
+  const res = await fetchWithAuth('/api/user/profile', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+
+  if (res.status === 409) {
+    throw new Error('이미 사용 중인 이메일입니다.');
+  }
+  if (res.status === 404) {
+    throw new Error('사용자를 찾을 수 없습니다.');
+  }
+  if (!res.ok) {
+    throw new Error('프로필 저장에 실패했습니다.');
+  }
+
+  const json = await res.json();
+  if (!json.success || !json.data) {
+    throw new Error('프로필 저장 응답이 올바르지 않습니다.');
+  }
+
+  const updated = json.data as UserInfo;
+  cachedUser = updated;
+  cacheTimestamp = Date.now();
+  return updated;
+}
+
 // ── 인증 포함 API 호출 ──
 
 export async function fetchWithAuth(
