@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { Sparkles, Flame, Clock3, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, Palette, BookOpen, Flame, Clock3, ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchBooks, type BookItem } from "../lib/api";
 import { isLoggedIn, fetchUserMe, removeAccessToken, clearUserCache } from "../lib/auth";
 
@@ -172,11 +172,6 @@ const LandingPage = () => {
 
   const bestBooks = useMemo(() => [...books].reverse().slice(0, 10), [books]);
   const latestBooks = useMemo(() => books.slice(0, 10), [books]);
-  const editorPicks = useMemo(() => {
-    if (books.length === 0) return [];
-    const mid = Math.floor(books.length / 2);
-    return [...books.slice(mid), ...books.slice(0, mid)].slice(0, 10);
-  }, [books]);
 
   const handleStartClick = async () => {
     if (isLoggedIn()) {
@@ -291,15 +286,39 @@ const LandingPage = () => {
                 books={latestBooks}
                 accentClass="text-primary"
               />
-              <SliderSection
-                title="에디터 추천"
-                icon={<Sparkles size={18} />}
-                books={editorPicks}
-                accentClass="text-tertiary"
-              />
             </div>
           </motion.div>
         )}
+      </section>
+
+      <section className="bg-surface-container-lowest py-20 md:py-32 relative z-10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div className="space-y-4 p-8 rounded-3xl glass-card border border-white/20">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                <Sparkles className="w-6 h-6 md:w-8 md:h-8" />
+              </div>
+              <h4 className="text-lg md:text-2xl font-headline font-bold text-on-surface">AI 스토리텔링</h4>
+              <p className="text-sm md:text-base text-on-surface-variant font-body">간단한 키워드만으로도 몰입감 있는 이야기를 생성할 수 있어요.</p>
+            </div>
+
+            <div className="space-y-4 p-8 rounded-3xl glass-card border border-white/20">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary">
+                <Palette className="w-6 h-6 md:w-8 md:h-8" />
+              </div>
+              <h4 className="text-lg md:text-2xl font-headline font-bold text-on-surface">마법 일러스트</h4>
+              <p className="text-sm md:text-base text-on-surface-variant font-body">수채화부터 만화풍까지, AI가 이야기 장면을 생생하게 그려줘요.</p>
+            </div>
+
+            <div className="space-y-4 p-8 rounded-3xl glass-card border border-white/20">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-tertiary/10 rounded-2xl flex items-center justify-center text-tertiary">
+                <BookOpen className="w-6 h-6 md:w-8 md:h-8" />
+              </div>
+              <h4 className="text-lg md:text-2xl font-headline font-bold text-on-surface">출간까지 한 번에</h4>
+              <p className="text-sm md:text-base text-on-surface-variant font-body">완성한 작품을 저장하고 실제 책처럼 감상해보세요.</p>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );
