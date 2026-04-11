@@ -46,7 +46,11 @@ const ProfilePage = () => {
             <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-primary shadow-2xl flex-shrink-0">
               <img src={user?.profileImage || "https://i.pravatar.cc/150?u=default"} alt="프로필" className="w-full h-full object-cover" />
             </div>
-            <button className="absolute bottom-1 right-1 md:bottom-2 md:right-2 w-8 h-8 md:w-10 md:h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-primary hover:scale-110 transition-transform">
+            <button
+              onClick={() => navigate("/profile/edit")}
+              aria-label="프로필 사진 수정"
+              className="absolute bottom-1 right-1 md:bottom-2 md:right-2 w-8 h-8 md:w-10 md:h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-primary hover:scale-110 transition-transform"
+            >
               <Palette size={18} className="md:w-5 md:h-5" />
             </button>
           </div>

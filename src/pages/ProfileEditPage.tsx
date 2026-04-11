@@ -33,10 +33,10 @@ const ProfileEditPage = () => {
         navigate("/login");
         return;
       }
-      setName(data.nickname);
-      setEmail(data.email);
-      setProfileImage(data.profileImage);
-      setPreviewUrl(data.profileImage);
+      setName(data.nickname ?? "");
+      setEmail(data.email ?? "");
+      setProfileImage(data.profileImage ?? "");
+      setPreviewUrl(data.profileImage ?? "");
       setLoading(false);
     });
   }, [navigate]);
@@ -221,7 +221,6 @@ const ProfileEditPage = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full bg-surface-container-lowest border-none ring-1 ring-outline-variant/20 focus:ring-2 focus:ring-primary rounded-xl px-4 py-3 pl-11 text-on-surface transition-all outline-none font-medium"
-                      required
                     />
                     <Mail
                       className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50"
