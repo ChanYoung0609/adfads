@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "motion/react";
 import { Palette, Heart, ChevronRight, Globe, FileText, LogOut, Settings } from "lucide-react";
 import { MOCK_BOOKS } from "../constants";
 import { logout, fetchUserMe, isLoggedIn, type UserInfo } from "../lib/auth";
@@ -15,6 +14,7 @@ const ProfilePage = () => {
       navigate("/login");
       return;
     }
+
     fetchUserMe().then((data) => {
       if (!data) {
         navigate("/login");
@@ -60,11 +60,13 @@ const ProfilePage = () => {
               <Palette size={18} className="md:w-5 md:h-5" />
             </button>
           </div>
+
           <div className="flex-1 text-center md:text-left space-y-4">
             <div className="space-y-1">
               <h1 className="text-3xl md:text-4xl font-display font-bold">{user?.nickname || "사용자"}</h1>
               <p className="text-on-surface-variant font-medium text-sm md:text-base">{user?.email}</p>
             </div>
+
             <div className="flex flex-wrap justify-center md:justify-start gap-6 md:gap-8 pt-4">
               <div className="text-center">
                 <p className="text-xl md:text-2xl font-bold">12</p>
@@ -80,8 +82,14 @@ const ProfilePage = () => {
               </div>
             </div>
           </div>
+
           <div className="flex flex-col gap-3 w-full md:w-auto">
-            <button onClick={() => navigate("/profile/edit")} className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg hover:bg-secondary transition-all text-sm md:text-base">프로필 수정</button>
+            <button
+              onClick={() => navigate("/profile/edit")}
+              className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg hover:bg-secondary transition-all text-sm md:text-base"
+            >
+              프로필 수정
+            </button>
             <button className="px-6 py-3 glass rounded-xl font-bold hover:bg-white transition-all text-sm md:text-base">설정</button>
           </div>
         </div>
@@ -93,7 +101,7 @@ const ProfilePage = () => {
               좋아요 한 이야기
             </h3>
             <div className="space-y-4">
-              {MOCK_BOOKS.slice(0, 2).map(book => (
+              {MOCK_BOOKS.slice(0, 2).map((book) => (
                 <div key={book.id} className="flex items-center gap-4 group cursor-pointer">
                   <div className="w-12 md:w-16 aspect-[3/4] rounded-lg overflow-hidden shadow-md flex-shrink-0">
                     <img
@@ -127,6 +135,7 @@ const ProfilePage = () => {
                 </div>
                 <span className="text-xs md:text-sm font-bold text-primary">한국어</span>
               </button>
+
               <button className="w-full flex items-center justify-between p-3 md:p-4 rounded-xl hover:bg-white transition-all text-sm md:text-base">
                 <div className="flex items-center gap-3">
                   <FileText size={20} className="text-on-surface-variant" />
@@ -134,7 +143,8 @@ const ProfilePage = () => {
                 </div>
                 <span className="text-xs md:text-sm font-bold text-primary">매직 프로</span>
               </button>
-              <button 
+
+              <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-between p-3 md:p-4 rounded-xl hover:bg-red-50 text-red-500 transition-all mt-4 text-sm md:text-base"
               >
