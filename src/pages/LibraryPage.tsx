@@ -27,7 +27,13 @@ const LibraryPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="glass p-4 md:p-6 rounded-3xl flex gap-4 md:gap-6 items-center">
                 <div className="w-20 md:w-24 aspect-[3/4] rounded-xl overflow-hidden shadow-md flex-shrink-0">
-                  <img src="https://picsum.photos/seed/progress1/300/400" alt="도서" className="w-full h-full object-cover" />
+                  <img
+                    src="https://picsum.photos/seed/progress1/300/400"
+                    alt="도서"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </div>
                 <div className="flex-1 space-y-3 md:space-y-4">
                   <div>
@@ -54,7 +60,13 @@ const LibraryPage = () => {
               {MOCK_BOOKS.map(book => (
                 <Link key={book.id} to={`/book/${book.id}`} className="group">
                   <div className="aspect-[3/4] rounded-xl overflow-hidden book-shadow mb-3 group-hover:-translate-y-1 transition-transform">
-                    <img src={book.coverUrl} alt={book.title} className="w-full h-full object-cover" />
+                    <img
+                      src={book.coverUrl}
+                      alt={book.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </div>
                   <h4 className="font-bold text-xs md:text-sm group-hover:text-primary transition-colors truncate">{book.title}</h4>
                 </Link>

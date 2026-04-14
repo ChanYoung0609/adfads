@@ -174,7 +174,13 @@ const WizardPage = () => {
             <div className="space-y-8">
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                 <div className="w-32 aspect-[3/4] rounded-xl overflow-hidden shadow-lg flex-shrink-0">
-                  <img src="https://picsum.photos/seed/preview/300/400" alt="미리보기" className="w-full h-full object-cover" />
+                  <img
+                    src="https://picsum.photos/seed/preview/300/400"
+                    alt="미리보기"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </div>
                 <div className="text-center sm:text-left">
                   <h2 className="text-2xl md:text-3xl font-display font-bold">구름 다람쥐</h2>

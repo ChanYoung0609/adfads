@@ -44,7 +44,13 @@ const ProfilePage = () => {
         <div className="glass p-6 md:p-12 rounded-3xl flex flex-col md:flex-row items-center gap-8 md:gap-10">
           <div className="relative">
             <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-primary shadow-2xl flex-shrink-0">
-              <img src={user?.profileImage || "https://i.pravatar.cc/150?u=default"} alt="프로필" className="w-full h-full object-cover" />
+              <img
+                src={user?.profileImage || "https://i.pravatar.cc/150?u=default"}
+                alt="프로필"
+                className="w-full h-full object-cover"
+                loading="eager"
+                decoding="async"
+              />
             </div>
             <button
               onClick={() => navigate("/profile/edit")}
@@ -90,7 +96,13 @@ const ProfilePage = () => {
               {MOCK_BOOKS.slice(0, 2).map(book => (
                 <div key={book.id} className="flex items-center gap-4 group cursor-pointer">
                   <div className="w-12 md:w-16 aspect-[3/4] rounded-lg overflow-hidden shadow-md flex-shrink-0">
-                    <img src={book.coverUrl} alt={book.title} className="w-full h-full object-cover" />
+                    <img
+                      src={book.coverUrl}
+                      alt={book.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold group-hover:text-primary transition-colors truncate text-sm md:text-base">{book.title}</h4>
