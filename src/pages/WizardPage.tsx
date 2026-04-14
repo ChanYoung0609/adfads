@@ -1,13 +1,16 @@
 ﻿import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, Rocket, PawPrint, Search, Wand2 } from "lucide-react";
+import { Sparkles, Rocket, PawPrint, Search, Wand2, Mic } from "lucide-react";
 import { cn } from "../lib/utils";
 import { STYLES, STORY_TEMPLATES } from "../constants";
 import { IllustrationStyle, StoryWizardState } from "../types";
 
 const WizardPage = () => {
   const [step, setStep] = React.useState(1);
+  const [isListening, setIsListening] = React.useState(false);
+  const [speechSupported, setSpeechSupported] = React.useState(true);
+  const recognitionRef = React.useRef<any>(null);
   const [state, setState] = React.useState<StoryWizardState>({
     pageCount: 12,
     style: "watercolor",
@@ -37,6 +40,75 @@ const WizardPage = () => {
       style: template.style as IllustrationStyle,
       title: template.title,
     });
+  };
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const SpeechRecognitionCtor =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognitionCtor) {
+      setSpeechSupported(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = "ko-KR";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event: any) => {
+      let finalTranscript = "";
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        const transcript = event.results[i][0]?.transcript ?? "";
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        }
+      }
+
+      const nextText = finalTranscript.trim();
+      if (!nextText) return;
+
+      setState((prev) => ({
+        ...prev,
+        prompt: prev.prompt ? `${prev.prompt}\n${nextText}` : nextText,
+      }));
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      recognitionRef.current = null;
+    };
+  }, []);
+
+  const handleMicInput = () => {
+    if (!speechSupported || !recognitionRef.current) return;
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      recognitionRef.current.start();
+      setIsListening(true);
+    } catch {
+      setIsListening(false);
+    }
   };
 
   return (
@@ -161,13 +233,29 @@ const WizardPage = () => {
                 />
               </div>
 
-              <button
-                onClick={() => setStep(2)}
-                disabled={!state.prompt}
-                className="w-full bg-primary text-white py-4 md:py-5 rounded-2xl font-bold text-lg shadow-xl hover:bg-secondary transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                스토리 생성 시작하기
-              </button>
+              <div className="flex items-stretch gap-3">
+                <button
+                  onClick={() => setStep(2)}
+                  disabled={!state.prompt}
+                  className="flex-1 bg-primary text-white py-4 md:py-5 rounded-2xl font-bold text-lg shadow-xl hover:bg-secondary transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  스토리 생성 시작하기
+                </button>
+                <button
+                  type="button"
+                  onClick={handleMicInput}
+                  disabled={!speechSupported}
+                  aria-label="음성 입력"
+                  className={`px-4 md:px-5 rounded-2xl font-bold shadow-xl border transition-all flex items-center gap-2 ${
+                    isListening
+                      ? "bg-red-500 text-white border-red-500"
+                      : "bg-white text-on-surface border-outline-variant hover:bg-surface-container-low"
+                  } disabled:opacity-40 disabled:cursor-not-allowed`}
+                >
+                  <Mic size={18} />
+                  <span className="hidden sm:inline text-sm md:text-base">{isListening ? "듣는 중" : "음성 입력"}</span>
+                </button>
+              </div>
             </>
           )}
 
