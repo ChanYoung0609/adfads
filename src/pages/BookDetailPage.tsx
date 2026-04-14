@@ -86,7 +86,15 @@ const BookDetailPage = () => {
                   animate={{ opacity: 1, x: 0 }}
                   className="w-[150px] md:w-full aspect-[3/4] rounded-2xl md:rounded-3xl overflow-hidden book-shadow flex-shrink-0"
                 >
-                  <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img
+                    src={book.coverImageUrl}
+                    alt={book.title}
+                    className="w-full h-full object-cover"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
                 </motion.div>
 
                 <div className="flex-grow md:hidden pt-1">

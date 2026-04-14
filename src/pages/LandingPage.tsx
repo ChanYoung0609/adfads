@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, Flame, Clock3, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { Sparkles, Flame, Clock3, ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchBooks, type BookItem } from "../lib/api";
 import { isLoggedIn, fetchUserMe, removeAccessToken, clearUserCache } from "../lib/auth";
 
@@ -142,6 +142,8 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false, more
                   src={book.coverImageUrl}
                   alt={book.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
                   referrerPolicy="no-referrer"
                 />
                 {rank !== null && (
@@ -249,6 +251,9 @@ const LandingPage = () => {
               src={HERO_ILLUSTRATION.src}
               alt={HERO_ILLUSTRATION.alt}
               className="w-full h-full object-cover"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
               referrerPolicy="no-referrer"
             />
           </motion.div>
@@ -268,6 +273,8 @@ const LandingPage = () => {
                     src={FEATURE_ICONS.story}
                     alt=""
                     className="w-full h-full object-contain"
+                    loading="lazy"
+                    decoding="async"
                     referrerPolicy="no-referrer"
                   />
                 </div>
@@ -283,6 +290,8 @@ const LandingPage = () => {
                     src={FEATURE_ICONS.illustration}
                     alt=""
                     className="w-full h-full object-contain"
+                    loading="lazy"
+                    decoding="async"
                     referrerPolicy="no-referrer"
                   />
                 </div>
@@ -298,6 +307,8 @@ const LandingPage = () => {
                     src={FEATURE_ICONS.complete}
                     alt=""
                     className="w-full h-full object-contain"
+                    loading="lazy"
+                    decoding="async"
                     referrerPolicy="no-referrer"
                   />
                 </div>
@@ -314,6 +325,9 @@ const LandingPage = () => {
                 src={currentBanner}
                 alt="동화 제작 배너"
                 className="w-full h-full object-cover"
+                loading="lazy"
+                fetchPriority="low"
+                decoding="async"
                 referrerPolicy="no-referrer"
               />
                 <button

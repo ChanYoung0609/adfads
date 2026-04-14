@@ -195,7 +195,14 @@ const GalleryPage = () => {
               >
                 <Link to={`/book/${book.bookId}`} className="flex flex-row sm:flex-col gap-4 sm:gap-0">
                   <div className="relative w-1/3 sm:w-full aspect-[3/4] rounded-2xl overflow-hidden book-shadow sm:mb-4 group-hover:-translate-y-2 transition-transform duration-500 flex-shrink-0">
-                    <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <img
+                      src={book.coverImageUrl}
+                      alt={book.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                    />
 
                     <button
                       type="button"
