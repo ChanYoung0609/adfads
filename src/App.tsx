@@ -20,6 +20,7 @@ const UnderConstructionPage = lazy(() => import("./pages/UnderConstructionPage")
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const AuthorDashboardPage = lazy(() => import("./pages/AuthorDashboardPage"));
 const ReaderDashboardPage = lazy(() => import("./pages/ReaderDashboardPage"));
+const ReaderLikedBooksPage = lazy(() => import("./pages/ReaderLikedBooksPage"));
 const StartPage = lazy(() => import("./pages/StartPage"));
 
 const RouteFallback = () => (
@@ -43,6 +44,7 @@ export default function App() {
               <Route path="/search" element={<GalleryPage />} />
               <Route path="/dashboard/author" element={<AuthorDashboardPage />} />
               <Route path="/dashboard/reader" element={<ReaderDashboardPage />} />
+              <Route path="/dashboard/reader/liked" element={<ReaderLikedBooksPage />} />
               <Route path="/book/:id" element={<BookDetailPage />} />
               <Route path="/read/:id" element={<ReadingPage />} />
               <Route path="/create" element={<WizardPage />} />

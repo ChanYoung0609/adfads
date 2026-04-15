@@ -101,14 +101,35 @@ const ReaderDashboardPage = () => {
               icon: Clock,
               color: "text-primary",
             },
-            { label: "좋아요 한 책", value: mockReaderStats.likedBooks, icon: Heart, color: "text-red-500" },
+            {
+              label: "좋아요 한 책",
+              value: mockReaderStats.likedBooks,
+              icon: Heart,
+              color: "text-red-500",
+              onClick: () => navigate("/dashboard/reader/liked"),
+            },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/20"
+              className={`bg-surface-container-lowest rounded-2xl p-5 border border-outline-variant/20 ${
+                stat.onClick ? "cursor-pointer hover:bg-surface-container-low transition-colors" : ""
+              }`}
+              onClick={stat.onClick}
+              role={stat.onClick ? "button" : undefined}
+              tabIndex={stat.onClick ? 0 : undefined}
+              onKeyDown={
+                stat.onClick
+                  ? (e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        stat.onClick?.();
+                      }
+                    }
+                  : undefined
+              }
             >
               <stat.icon size={20} className={`${stat.color} mb-2`} />
               <p className="text-2xl font-headline font-bold text-on-surface">{stat.value}</p>
