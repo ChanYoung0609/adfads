@@ -220,9 +220,11 @@ const LandingPage = () => {
             className="text-center md:text-left space-y-5 md:space-y-7 order-2 md:order-1"
           >
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-headline font-black leading-tight text-on-surface">
-              AI로 나만의 <span className="text-primary">이야기</span>를
+              AI로 나만의 <span className="text-primary text-[1.15em] md:text-[1.22em]">이야기</span>를
               <br />
-              <span className="text-primary">그림책</span>으로 만들어보세요
+              <span className="text-primary text-[1.15em] md:text-[1.22em]">그림책</span>으로
+              <br />
+              만들어보세요
             </h1>
             <p className="text-sm md:text-lg text-on-surface-variant leading-relaxed font-body">
               아이디어만 있다면 누구나 쉽게
