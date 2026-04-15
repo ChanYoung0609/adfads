@@ -63,7 +63,7 @@ const ProfilePage = () => {
 
           <div className="flex-1 text-center md:text-left space-y-4">
             <div className="space-y-1">
-              <h1 className="text-3xl md:text-4xl font-display font-bold">{user?.nickname || "사용자"}</h1>
+              <h1 className="text-3xl md:text-4xl font-headline font-bold">{user?.nickname || "사용자"}</h1>
               <p className="text-on-surface-variant font-medium text-sm md:text-base">{user?.email}</p>
             </div>
 
