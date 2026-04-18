@@ -1,9 +1,18 @@
-﻿import React from "react";
-import { Link } from "react-router-dom";
+﻿import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { PenTool, BookOpen } from "lucide-react";
+import { isLoggedIn } from "../lib/auth";
 
 const StartPage = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      navigate("/login");
+    }
+  }, [navigate]);
+
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6">
       <div className="max-w-5xl mx-auto space-y-8 md:space-y-12">
