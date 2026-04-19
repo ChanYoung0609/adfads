@@ -95,6 +95,26 @@ const ProfilePage = () => {
           </div>
         </div>
 
+        <div className="glass p-6 md:p-8 rounded-3xl">
+          <h3 className="text-lg md:text-xl font-bold text-on-surface mb-4">대시보드 바로가기</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard/author")}
+              className="px-5 py-4 rounded-xl bg-primary text-white font-bold hover:bg-secondary transition-colors"
+            >
+              작가 대시보드
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard/reader")}
+              className="px-5 py-4 rounded-xl bg-surface-container-low border border-outline-variant/30 text-on-surface font-bold hover:bg-surface-container transition-colors"
+            >
+              독자 대시보드
+            </button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           <div className="glass p-6 md:p-8 rounded-3xl space-y-6">
             <h3 className="text-lg md:text-xl font-bold flex items-center gap-2">
