@@ -43,19 +43,7 @@ const AuthorDashboardPage = () => {
   }, [navigate]);
 
   const sortedBooks = useMemo(() => {
-    const list = [...mockBookPerformance];
-
-    if (performanceSort === "likes") {
-      return list.sort((a, b) => b.likes - a.likes);
-    }
-    if (performanceSort === "rating") {
-      return list.sort((a, b) => b.rating - a.rating);
-    }
-    if (performanceSort === "revenue") {
-      return list.sort((a, b) => b.revenue - a.revenue);
-    }
-
-    return list.sort((a, b) => b.reads - a.reads);
+    return [...mockBookPerformance].sort((a, b) => b[performanceSort] - a[performanceSort]);
   }, [performanceSort]);
 
   return (
