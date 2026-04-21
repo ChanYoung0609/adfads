@@ -1,13 +1,19 @@
-import React, { useEffect } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import {
-  BookOpen, DollarSign, Eye, Heart, TrendingUp,
-  Star, ArrowLeft, PenTool, BarChart3, Crown
+  BookOpen,
+  DollarSign,
+  Eye,
+  TrendingUp,
+  Star,
+  ArrowLeft,
+  PenTool,
+  BarChart3,
+  Crown,
 } from "lucide-react";
 import { isLoggedIn } from "../lib/auth";
 
-// TODO: 실제 API 연동
 const mockAuthorStats = {
   totalBooks: 12,
   publishedBooks: 8,
@@ -20,34 +26,54 @@ const mockAuthorStats = {
 };
 
 const mockBookPerformance = [
-  { id: "1", title: "달빛 요정의 모험", reads: 520, likes: 128, revenue: 82_000, isPaid: true, rating: 4.8 },
+  { id: "1", title: "별빛 요정의 모험", reads: 520, likes: 128, revenue: 82_000, isPaid: true, rating: 4.8 },
   { id: "2", title: "숲속 친구들", reads: 380, likes: 95, revenue: 65_000, isPaid: true, rating: 4.5 },
   { id: "3", title: "바다 위의 별", reads: 290, likes: 67, revenue: 0, isPaid: false, rating: 4.7 },
-  { id: "4", title: "구름 위의 성", reads: 210, likes: 52, revenue: 48_000, isPaid: true, rating: 4.3 },
+  { id: "4", title: "구름 위의 집", reads: 210, likes: 52, revenue: 48_000, isPaid: true, rating: 4.3 },
 ];
+
+type PerformanceSort = "reads" | "likes" | "rating" | "revenue";
 
 const AuthorDashboardPage = () => {
   const navigate = useNavigate();
+  const [performanceSort, setPerformanceSort] = useState<PerformanceSort>("reads");
 
   useEffect(() => {
     if (!isLoggedIn()) navigate("/login");
   }, [navigate]);
 
+  const sortedBooks = useMemo(() => {
+    const list = [...mockBookPerformance];
+
+    if (performanceSort === "likes") {
+      return list.sort((a, b) => b.likes - a.likes);
+    }
+    if (performanceSort === "rating") {
+      return list.sort((a, b) => b.rating - a.rating);
+    }
+    if (performanceSort === "revenue") {
+      return list.sort((a, b) => b.revenue - a.revenue);
+    }
+
+    return list.sort((a, b) => b.reads - a.reads);
+  }, [performanceSort]);
+
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* 헤더 */}
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate("/start")} className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-colors">
+          <button
+            onClick={() => navigate("/start")}
+            className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-colors"
+          >
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-3xl md:text-5xl font-headline font-extrabold text-on-surface">작가로써의 활동기록</h1>
-            <p className="text-on-surface-variant text-sm md:text-base">작품 성과와 수익을 확인하세요.</p>
+            <h1 className="text-3xl md:text-5xl font-headline font-extrabold text-on-surface">작가로서의 활동 기록</h1>
+            <p className="text-on-surface-variant text-sm md:text-base">작품 성과와 수익을 확인해보세요</p>
           </div>
         </div>
 
-        {/* 수익 카드 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -59,7 +85,7 @@ const AuthorDashboardPage = () => {
             <p className="text-4xl font-headline font-extrabold mt-1">{mockAuthorStats.totalRevenue.toLocaleString()}원</p>
             <div className="flex items-center gap-2 mt-3 text-on-primary/80 text-sm">
               <TrendingUp size={14} />
-              이번 달 {mockAuthorStats.monthlyRevenue.toLocaleString()}원
+              이번 달 +{mockAuthorStats.monthlyRevenue.toLocaleString()}원
             </div>
           </motion.div>
 
@@ -85,16 +111,25 @@ const AuthorDashboardPage = () => {
           </div>
         </div>
 
-        {/* 작품별 성과 */}
         <div className="bg-surface-container-lowest rounded-3xl p-6 border border-outline-variant/20">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <h2 className="text-xl font-headline font-bold text-on-surface flex items-center gap-2">
               <BarChart3 size={20} className="text-primary" />
               작품별 성과
             </h2>
+            <select
+              value={performanceSort}
+              onChange={(e) => setPerformanceSort(e.target.value as PerformanceSort)}
+              className="w-full sm:w-auto rounded-lg border border-outline-variant/40 bg-white px-3 py-2 text-sm font-semibold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40"
+              aria-label="작품별 성과 정렬"
+            >
+              <option value="reads">조회수 높은순</option>
+              <option value="likes">좋아요 높은순</option>
+              <option value="rating">평점 높은순</option>
+              <option value="revenue">수익 높은순</option>
+            </select>
           </div>
 
-          {/* 테이블 헤더 - 데스크탑 */}
           <div className="hidden md:grid grid-cols-12 gap-4 px-4 pb-3 text-xs font-bold text-on-surface-variant uppercase tracking-wider">
             <div className="col-span-4">작품</div>
             <div className="col-span-2 text-right">조회수</div>
@@ -104,7 +139,7 @@ const AuthorDashboardPage = () => {
           </div>
 
           <div className="space-y-3">
-            {mockBookPerformance.map((book, i) => (
+            {sortedBooks.map((book, i) => (
               <motion.div
                 key={book.id}
                 initial={{ opacity: 0, x: -10 }}
@@ -141,16 +176,13 @@ const AuthorDashboardPage = () => {
                 </div>
                 <div className="md:col-span-2 md:text-right flex md:block items-center gap-2">
                   <span className="md:hidden text-xs text-on-surface-variant">수익</span>
-                  <p className="font-bold text-on-surface">
-                    {book.revenue > 0 ? `${book.revenue.toLocaleString()}원` : "-"}
-                  </p>
+                  <p className="font-bold text-on-surface">{book.revenue > 0 ? `${book.revenue.toLocaleString()}원` : "-"}</p>
                 </div>
               </motion.div>
             ))}
           </div>
         </div>
 
-        {/* 새 작품 CTA */}
         <div className="flex justify-center">
           <Link
             to="/create"
