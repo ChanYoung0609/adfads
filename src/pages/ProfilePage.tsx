@@ -1,8 +1,8 @@
 ﻿import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Palette, Heart, ChevronRight, Globe, FileText, LogOut, Settings } from "lucide-react";
+import { Palette, Heart, ChevronRight } from "lucide-react";
 import { MOCK_BOOKS } from "../constants";
-import { logout, fetchUserMe, isLoggedIn, type UserInfo } from "../lib/auth";
+import { fetchUserMe, isLoggedIn, type UserInfo } from "../lib/auth";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -24,11 +24,6 @@ const ProfilePage = () => {
       setLoading(false);
     });
   }, [navigate]);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/");
-  };
 
   if (loading) {
     return (
@@ -81,7 +76,6 @@ const ProfilePage = () => {
                 <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-on-surface-variant">받은 좋아요</p>
               </div>
             </div>
-
           </div>
 
           <div className="flex flex-col gap-3 w-full md:w-auto">
@@ -115,7 +109,7 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 gap-6 md:gap-8">
           <div className="glass p-6 md:p-8 rounded-3xl space-y-6">
             <h3 className="text-lg md:text-xl font-bold flex items-center gap-2">
               <Heart size={20} className="text-red-500 fill-red-500" />
@@ -140,40 +134,6 @@ const ProfilePage = () => {
                   <ChevronRight size={20} className="text-on-surface-variant flex-shrink-0" />
                 </div>
               ))}
-            </div>
-          </div>
-
-          <div className="glass p-6 md:p-8 rounded-3xl space-y-6">
-            <h3 className="text-lg md:text-xl font-bold flex items-center gap-2">
-              <Settings size={20} className="text-primary" />
-              계정 설정
-            </h3>
-            <div className="space-y-2">
-              <button className="w-full flex items-center justify-between p-3 md:p-4 rounded-xl hover:bg-white transition-all text-sm md:text-base">
-                <div className="flex items-center gap-3">
-                  <Globe size={20} className="text-on-surface-variant" />
-                  <span className="font-medium">언어 설정</span>
-                </div>
-                <span className="text-xs md:text-sm font-bold text-primary">한국어</span>
-              </button>
-
-              <button className="w-full flex items-center justify-between p-3 md:p-4 rounded-xl hover:bg-white transition-all text-sm md:text-base">
-                <div className="flex items-center gap-3">
-                  <FileText size={20} className="text-on-surface-variant" />
-                  <span className="font-medium">구독 플랜</span>
-                </div>
-                <span className="text-xs md:text-sm font-bold text-primary">매직 프로</span>
-              </button>
-
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-between p-3 md:p-4 rounded-xl hover:bg-red-50 text-red-500 transition-all mt-4 text-sm md:text-base"
-              >
-                <div className="flex items-center gap-3">
-                  <LogOut size={20} />
-                  <span className="font-bold">로그아웃</span>
-                </div>
-              </button>
             </div>
           </div>
         </div>
