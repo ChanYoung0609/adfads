@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Palette, Heart } from "lucide-react";
+import { Palette } from "lucide-react";
 import { MOCK_BOOKS } from "../constants";
 import { fetchUserMe, isLoggedIn, type UserInfo } from "../lib/auth";
 
@@ -68,7 +68,6 @@ const ProfilePage = () => {
               <h1 className="text-3xl md:text-4xl font-headline font-bold">{user?.nickname || "사용자"}</h1>
               <p className="text-on-surface-variant font-medium text-sm md:text-base">{user?.email}</p>
             </div>
-
           </div>
 
           <div className="flex flex-col gap-3 w-full md:w-auto">
@@ -104,38 +103,35 @@ const ProfilePage = () => {
 
         <div className="grid grid-cols-1 gap-6 md:gap-8">
           <div className="glass p-6 md:p-8 rounded-3xl space-y-6">
-            <h3 className="text-lg md:text-xl font-bold flex items-center gap-2">
-              <Heart size={20} className="text-red-500 fill-red-500" />
-              간략 정보
-            </h3>
+            <h3 className="text-lg md:text-xl font-headline font-bold text-on-surface">간략 정보</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
-                <p className="text-xs text-on-surface-variant">이번 달 완독 수</p>
-                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{monthlyCompleted}</p>
+                <p className="text-xs font-body text-on-surface-variant">이번 달 완독 수</p>
+                <p className="mt-1 text-xl md:text-2xl font-headline font-bold text-on-surface">{monthlyCompleted}</p>
               </div>
               <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
-                <p className="text-xs text-on-surface-variant">평균 별점(내가 준 별점)</p>
-                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{averageRating}</p>
+                <p className="text-xs font-body text-on-surface-variant">평균 별점(내가 준 별점)</p>
+                <p className="mt-1 text-xl md:text-2xl font-headline font-bold text-on-surface">{averageRating}</p>
               </div>
               <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
-                <p className="text-xs text-on-surface-variant">가장 많이 읽은 카테고리</p>
-                <p className="mt-1 text-sm md:text-base font-bold text-on-surface truncate">{favoriteCategory}</p>
+                <p className="text-xs font-body text-on-surface-variant">가장 많이 읽은 카테고리</p>
+                <p className="mt-1 text-xl md:text-2xl font-headline font-bold text-on-surface truncate">{favoriteCategory}</p>
               </div>
               <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
-                <p className="text-xs text-on-surface-variant">최근 본 책</p>
-                <p className="mt-1 text-sm md:text-base font-bold text-on-surface truncate">{recentReadTitle}</p>
+                <p className="text-xs font-body text-on-surface-variant">최근 본 책</p>
+                <p className="mt-1 text-xl md:text-2xl font-headline font-bold text-on-surface truncate">{recentReadTitle}</p>
               </div>
               <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
-                <p className="text-xs text-on-surface-variant">팔로우 작가 수</p>
-                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{followingAuthors}</p>
+                <p className="text-xs font-body text-on-surface-variant">팔로우 작가 수</p>
+                <p className="mt-1 text-xl md:text-2xl font-headline font-bold text-on-surface">{followingAuthors}</p>
               </div>
               <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
-                <p className="text-xs text-on-surface-variant">내 책장 총 권수</p>
-                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{libraryCount}</p>
+                <p className="text-xs font-body text-on-surface-variant">내 책장 총 권수</p>
+                <p className="mt-1 text-xl md:text-2xl font-headline font-bold text-on-surface">{libraryCount}</p>
               </div>
               <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
-                <p className="text-xs text-on-surface-variant">연속 활동일(스트릭)</p>
-                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{streakDays}일</p>
+                <p className="text-xs font-body text-on-surface-variant">연속 활동일(스트릭)</p>
+                <p className="mt-1 text-xl md:text-2xl font-headline font-bold text-on-surface">{streakDays}일</p>
               </div>
             </div>
           </div>
