@@ -1,17 +1,34 @@
-import React, { useEffect, useMemo } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
-import { ArrowLeft, BarChart3, BookOpen, TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeft, BarChart3, BookOpen } from "lucide-react";
 import { isLoggedIn } from "../lib/auth";
 
-const monthlyRevenueData = [
+const yearlyRevenueData = [
   { month: "1월", revenue: 22000 },
   { month: "2월", revenue: 28000 },
   { month: "3월", revenue: 36000 },
   { month: "4월", revenue: 41000 },
   { month: "5월", revenue: 52000 },
   { month: "6월", revenue: 66000 },
+  { month: "7월", revenue: 57000 },
+  { month: "8월", revenue: 62000 },
+  { month: "9월", revenue: 73000 },
+  { month: "10월", revenue: 68000 },
+  { month: "11월", revenue: 76000 },
+  { month: "12월", revenue: 81000 },
 ];
+
+const getRevenueDataByYear = (year: number) => {
+  const yearOffset = year - 2026;
+  const growthFactor = 1 + yearOffset * 0.06;
+
+  return yearlyRevenueData.map((item, index) => {
+    const seasonalFactor = index % 4 === 0 ? 0.97 : index % 3 === 0 ? 1.04 : 1;
+    const value = Math.max(8000, Math.round(item.revenue * growthFactor * seasonalFactor));
+    return { month: item.month, revenue: Math.round(value / 100) * 100 };
+  });
+};
 
 const bookSalesData = [
   { id: "1", title: "별빛 요정의 모험", sold: 164 },
@@ -22,22 +39,17 @@ const bookSalesData = [
 
 const AuthorRevenuePage = () => {
   const navigate = useNavigate();
+  const [chartType, setChartType] = useState<"revenue" | "sales">("revenue");
+  const [selectedYear, setSelectedYear] = useState(2026);
 
   useEffect(() => {
     if (!isLoggedIn()) navigate("/login");
   }, [navigate]);
 
-  const maxMonthlyRevenue = Math.max(...monthlyRevenueData.map((item) => item.revenue));
-  const maxBookSales = Math.max(...bookSalesData.map((item) => item.sold));
+  const revenueData = useMemo(() => getRevenueDataByYear(selectedYear), [selectedYear]);
 
-  const totalRevenue = useMemo(
-    () => monthlyRevenueData.reduce((sum, item) => sum + item.revenue, 0),
-    [],
-  );
-  const bestMonth = useMemo(
-    () => monthlyRevenueData.reduce((best, current) => (current.revenue > best.revenue ? current : best)),
-    [],
-  );
+  const maxMonthlyRevenue = Math.max(...revenueData.map((item) => item.revenue));
+  const maxBookSales = Math.max(...bookSalesData.map((item) => item.sold));
 
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6">
@@ -55,90 +67,111 @@ const AuthorRevenuePage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-primary to-primary-container rounded-3xl p-6 text-on-primary md:col-span-2"
-          >
-            <Wallet size={24} className="mb-2" />
-            <p className="text-on-primary/80 text-sm">최근 6개월 누적 수익</p>
-            <p className="text-3xl md:text-4xl font-headline font-extrabold mt-1">{totalRevenue.toLocaleString()}원</p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="bg-surface-container-lowest rounded-3xl p-6 border border-outline-variant/20"
-          >
-            <TrendingUp size={20} className="text-primary mb-2" />
-            <p className="text-xs text-on-surface-variant">최고 수익 월</p>
-            <p className="text-2xl font-headline font-extrabold text-on-surface mt-1">{bestMonth.month}</p>
-            <p className="text-sm text-primary font-bold mt-1">{bestMonth.revenue.toLocaleString()}원</p>
-          </motion.div>
-        </div>
-
         <motion.section
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-surface-container-lowest rounded-3xl p-6 md:p-8 border border-outline-variant/20"
         >
-          <h2 className="text-xl font-headline font-bold text-on-surface flex items-center gap-2 mb-6">
-            <BarChart3 size={20} className="text-primary" />
-            월별 수익 그래프
-          </h2>
-          <div className="h-72 flex items-end gap-2 md:gap-4">
-            {monthlyRevenueData.map((item, index) => {
-              const heightRatio = (item.revenue / maxMonthlyRevenue) * 100;
-              return (
-                <div key={item.month} className="flex-1 h-full flex flex-col justify-end items-center">
-                  <p className="text-[10px] md:text-xs text-on-surface-variant mb-2">{item.revenue.toLocaleString()}원</p>
-                  <motion.div
-                    initial={{ scaleY: 0 }}
-                    animate={{ scaleY: 1 }}
-                    transition={{ duration: 0.6, ease: "easeOut", delay: index * 0.08 }}
-                    style={{ transformOrigin: "bottom", height: `${Math.max(heightRatio, 8)}%` }}
-                    className="w-full max-w-16 rounded-t-xl bg-gradient-to-t from-primary to-secondary shadow-sm"
-                  />
-                  <p className="text-xs md:text-sm text-on-surface-variant mt-2">{item.month}</p>
-                </div>
-              );
-            })}
-          </div>
-        </motion.section>
+          <div className="flex flex-col gap-3 mb-6">
+            <div className="inline-flex items-center rounded-full p-1 bg-surface-container border border-outline-variant/30 w-fit">
+              <button
+                type="button"
+                onClick={() => setChartType("revenue")}
+                className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${
+                  chartType === "revenue" ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
+                월별 수익
+              </button>
+              <button
+                type="button"
+                onClick={() => setChartType("sales")}
+                className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${
+                  chartType === "sales" ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
+                책별 판매량
+              </button>
+            </div>
 
-        <motion.section
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 }}
-          className="bg-surface-container-lowest rounded-3xl p-6 md:p-8 border border-outline-variant/20"
-        >
-          <h2 className="text-xl font-headline font-bold text-on-surface flex items-center gap-2 mb-6">
-            <BookOpen size={20} className="text-secondary" />
-            책별 판매량 그래프
-          </h2>
-          <div className="space-y-4">
-            {bookSalesData.map((book, index) => {
-              const widthRatio = (book.sold / maxBookSales) * 100;
-              return (
-                <div key={book.id}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-sm font-bold text-on-surface truncate pr-2">{book.title}</p>
-                    <p className="text-xs md:text-sm text-on-surface-variant">{book.sold}권</p>
-                  </div>
-                  <div className="h-3 rounded-full bg-surface-container overflow-hidden">
-                    <motion.div
-                      initial={{ scaleX: 0 }}
-                      animate={{ scaleX: 1 }}
-                      transition={{ duration: 0.65, ease: "easeOut", delay: index * 0.09 }}
-                      style={{ transformOrigin: "left", width: `${Math.max(widthRatio, 8)}%` }}
-                      className="h-full rounded-full bg-gradient-to-r from-secondary to-tertiary"
-                    />
-                  </div>
-                </div>
-              );
-            })}
           </div>
+
+          {chartType === "revenue" ? (
+            <>
+              <h2 className="text-xl font-headline font-bold text-on-surface flex items-center gap-2 mb-6">
+                <BarChart3 size={20} className="text-primary" />
+                월별 수익 그래프
+              </h2>
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setSelectedYear((prev) => prev - 1)}
+                  className="w-9 h-9 rounded-full bg-surface-container border border-outline-variant/30 text-on-surface hover:bg-surface-container-high transition-colors"
+                  aria-label="이전 연도"
+                >
+                  {"<"}
+                </button>
+                <p className="text-lg md:text-xl font-headline font-bold text-on-surface min-w-20 text-center">
+                  {selectedYear}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedYear((prev) => prev + 1)}
+                  className="w-9 h-9 rounded-full bg-surface-container border border-outline-variant/30 text-on-surface hover:bg-surface-container-high transition-colors"
+                  aria-label="다음 연도"
+                >
+                  {">"}
+                </button>
+              </div>
+              <div className="h-72 flex items-end gap-2 md:gap-3">
+                {revenueData.map((item, index) => {
+                  const heightRatio = (item.revenue / maxMonthlyRevenue) * 100;
+                  return (
+                    <div key={`${selectedYear}-${item.month}`} className="flex-1 h-full flex flex-col justify-end items-center">
+                      <p className="text-[10px] md:text-xs text-on-surface-variant mb-2">{item.revenue.toLocaleString()}원</p>
+                      <motion.div
+                        initial={{ scaleY: 0 }}
+                        animate={{ scaleY: 1 }}
+                        transition={{ duration: 0.6, ease: "easeOut", delay: index * 0.06 }}
+                        style={{ transformOrigin: "bottom", height: `${Math.max(heightRatio, 8)}%` }}
+                        className="w-full max-w-14 rounded-t-xl bg-gradient-to-t from-primary to-secondary shadow-sm"
+                      />
+                      <p className="text-xs md:text-sm text-on-surface-variant mt-2">{item.month}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-headline font-bold text-on-surface flex items-center gap-2 mb-6">
+                <BookOpen size={20} className="text-secondary" />
+                책별 판매량 그래프
+              </h2>
+              <div className="space-y-4">
+                {bookSalesData.map((book, index) => {
+                  const widthRatio = (book.sold / maxBookSales) * 100;
+                  return (
+                    <div key={book.id}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <p className="text-sm font-bold text-on-surface truncate pr-2">{book.title}</p>
+                        <p className="text-xs md:text-sm text-on-surface-variant">{book.sold}권</p>
+                      </div>
+                      <div className="h-3 rounded-full bg-surface-container overflow-hidden">
+                        <motion.div
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: 1 }}
+                          transition={{ duration: 0.65, ease: "easeOut", delay: index * 0.09 }}
+                          style={{ transformOrigin: "left", width: `${Math.max(widthRatio, 8)}%` }}
+                          className="h-full rounded-full bg-gradient-to-r from-secondary to-tertiary"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </motion.section>
       </div>
     </div>
