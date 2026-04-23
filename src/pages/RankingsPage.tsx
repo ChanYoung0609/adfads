@@ -205,6 +205,15 @@ const AuthorSection = ({ title, icon, items }: AuthorSectionProps) => {
               <div className="mb-2 px-2 py-1 rounded-xl bg-surface-container border border-outline-variant/20 text-center">
                 <p className="text-xs font-bold text-on-surface truncate">{item.name}</p>
               </div>
+              <div className="mb-2 flex justify-center">
+                <img
+                  src={`https://picsum.photos/seed/author-${item.id}/96/96`}
+                  alt={`${item.name} 프로필`}
+                  className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-white shadow-sm"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
               <div
                 className={`rounded-t-2xl bg-gradient-to-b ${podiumToneClass[rank]} ${podiumHeightClass[rank]} flex items-center justify-center shadow-inner`}
               >
@@ -260,6 +269,15 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
             <div key={item.id} className="flex-1 min-w-0">
               <div className="mb-2 px-2 py-1 rounded-xl bg-surface-container border border-outline-variant/20 text-center">
                 <p className="text-xs font-bold text-on-surface truncate">{item.title}</p>
+              </div>
+              <div className="mb-2 flex justify-center">
+                <img
+                  src={item.coverImageUrl}
+                  alt={`${item.title} 표지`}
+                  className="w-11 h-14 md:w-12 md:h-16 rounded-lg object-cover border-2 border-white shadow-sm"
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
               <div
                 className={`rounded-t-2xl bg-gradient-to-b ${podiumToneClass[rank]} ${podiumHeightClass[rank]} flex items-center justify-center shadow-inner`}
