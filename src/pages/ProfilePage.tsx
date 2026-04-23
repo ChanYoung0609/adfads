@@ -8,9 +8,13 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const likedCount = MOCK_BOOKS.length;
-  const thisWeekLikes = Math.max(1, Math.floor(likedCount / 4));
-  const recentLikedTitle = MOCK_BOOKS[0]?.title ?? "-";
+  const monthlyCompleted = Math.max(1, Math.floor(MOCK_BOOKS.length / 3));
+  const averageRating = 4.6;
+  const favoriteCategory = "판타지";
+  const recentReadTitle = MOCK_BOOKS[0]?.title ?? "-";
+  const followingAuthors = 12;
+  const libraryCount = MOCK_BOOKS.length;
+  const streakDays = 7;
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -65,20 +69,6 @@ const ProfilePage = () => {
               <p className="text-on-surface-variant font-medium text-sm md:text-base">{user?.email}</p>
             </div>
 
-            <div className="flex flex-wrap justify-center md:justify-start gap-6 md:gap-8 pt-4">
-              <div className="text-center">
-                <p className="text-xl md:text-2xl font-bold">12</p>
-                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-on-surface-variant">만든 책</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xl md:text-2xl font-bold">45</p>
-                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-on-surface-variant">공유한 이야기</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xl md:text-2xl font-bold">1.2k</p>
-                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-on-surface-variant">받은 좋아요</p>
-              </div>
-            </div>
           </div>
 
           <div className="flex flex-col gap-3 w-full md:w-auto">
@@ -116,20 +106,36 @@ const ProfilePage = () => {
           <div className="glass p-6 md:p-8 rounded-3xl space-y-6">
             <h3 className="text-lg md:text-xl font-bold flex items-center gap-2">
               <Heart size={20} className="text-red-500 fill-red-500" />
-              좋아요 한 이야기
+              간략 정보
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
-                <p className="text-xs text-on-surface-variant">총 좋아요</p>
-                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{likedCount}</p>
+                <p className="text-xs text-on-surface-variant">이번 달 완독 수</p>
+                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{monthlyCompleted}</p>
               </div>
               <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
-                <p className="text-xs text-on-surface-variant">이번 주 추가</p>
-                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">+{thisWeekLikes}</p>
+                <p className="text-xs text-on-surface-variant">평균 별점(내가 준 별점)</p>
+                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{averageRating}</p>
               </div>
               <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
-                <p className="text-xs text-on-surface-variant">최근 좋아요</p>
-                <p className="mt-1 text-sm md:text-base font-bold text-on-surface truncate">{recentLikedTitle}</p>
+                <p className="text-xs text-on-surface-variant">가장 많이 읽은 카테고리</p>
+                <p className="mt-1 text-sm md:text-base font-bold text-on-surface truncate">{favoriteCategory}</p>
+              </div>
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
+                <p className="text-xs text-on-surface-variant">최근 본 책</p>
+                <p className="mt-1 text-sm md:text-base font-bold text-on-surface truncate">{recentReadTitle}</p>
+              </div>
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
+                <p className="text-xs text-on-surface-variant">팔로우 작가 수</p>
+                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{followingAuthors}</p>
+              </div>
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
+                <p className="text-xs text-on-surface-variant">내 책장 총 권수</p>
+                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{libraryCount}</p>
+              </div>
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
+                <p className="text-xs text-on-surface-variant">연속 활동일(스트릭)</p>
+                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{streakDays}일</p>
               </div>
             </div>
           </div>
