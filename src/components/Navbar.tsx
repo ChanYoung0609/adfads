@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { BookPlus, BookOpen, LogIn, Compass, Library } from "lucide-react";
+import { BookPlus, BookOpen, LogIn, Compass, Library, Trophy } from "lucide-react";
 import { cn } from "../lib/utils";
 import { isLoggedIn as checkAuth, fetchUserMe, type UserInfo } from "../lib/auth";
 
@@ -52,6 +52,7 @@ const Navbar = () => {
   if (isReading) return null;
 
   const isExploreActive = location.pathname === "/explore" || location.pathname === "/search";
+  const isRankingsActive = location.pathname.startsWith("/rankings");
   const isLibraryActive = location.pathname.startsWith("/library");
   const isCreateActive = location.pathname.startsWith("/create");
   const isProfileActive = location.pathname.startsWith("/profile");
@@ -76,6 +77,18 @@ const Navbar = () => {
               )}
             >
               갤러리
+            </Link>
+
+            <Link
+              to="/rankings"
+              className={cn(
+                "px-3 py-2 rounded-full font-label font-semibold transition-colors",
+                isRankingsActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-on-surface hover:text-primary hover:bg-surface-container-low",
+              )}
+            >
+              이달의 랭킹
             </Link>
 
             <Link
@@ -134,7 +147,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-primary/10 px-4 pb-[env(safe-area-inset-bottom)]">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-primary/10 px-2 pb-[env(safe-area-inset-bottom)]">
         <div className="flex justify-around items-center h-16 max-w-md mx-auto">
           <Link
             to="/explore"
@@ -142,6 +155,14 @@ const Navbar = () => {
           >
             <Compass size={20} />
             <span className="text-[10px] font-bold">갤러리</span>
+          </Link>
+
+          <Link
+            to="/rankings"
+            className={cn("flex flex-col items-center gap-1 transition-colors", isRankingsActive ? "text-primary" : "text-on-surface-variant")}
+          >
+            <Trophy size={20} />
+            <span className="text-[10px] font-bold">랭킹</span>
           </Link>
 
           <Link
@@ -167,7 +188,7 @@ const Navbar = () => {
               to="/profile"
               className={cn("flex flex-col items-center gap-1 transition-colors", isProfileActive ? "text-primary" : "text-on-surface-variant")}
             >
-              <div className={cn("w-5 h-5 rounded-full overflow-hidden border", isProfileActive ? "border-primary" : "border-on-surface-variant")}> 
+              <div className={cn("w-5 h-5 rounded-full overflow-hidden border", isProfileActive ? "border-primary" : "border-on-surface-variant")}>
                 <img src={user?.profileImage || "https://i.pravatar.cc/150?u=default"} alt="프로필" className="w-full h-full object-cover" />
               </div>
               <span className="text-[10px] font-bold">프로필</span>
