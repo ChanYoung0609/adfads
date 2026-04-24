@@ -236,13 +236,22 @@ const AuthorSection = ({ title, icon, items }: AuthorSectionProps) => {
 
       <div className="space-y-2">
         {items.map((item, i) => (
-          <div key={item.id} className="rounded-xl bg-surface-container-low border border-outline-variant/15 p-3">
-            <p className="font-semibold text-on-surface truncate">
-              {rankBadge[i]} {item.name}
-            </p>
-            <p className="text-xs text-on-surface-variant mt-1">
-              작품 {item.books}작 · 좋아요 {item.likes.toLocaleString()} · 성장률 {item.growth}
-            </p>
+          <div key={item.id} className="rounded-xl bg-surface-container-low border border-outline-variant/15 p-3 flex items-center gap-3">
+            <img
+              src={`https://picsum.photos/seed/author-list-${item.id}/96/96`}
+              alt={`${item.name} 프로필`}
+              className="w-11 h-11 md:w-12 md:h-12 rounded-full object-cover shrink-0 border border-white"
+              loading="lazy"
+              decoding="async"
+            />
+            <div className="min-w-0">
+              <p className="font-semibold text-on-surface truncate">
+                {rankBadge[i]} {item.name}
+              </p>
+              <p className="text-xs text-on-surface-variant mt-1">
+                작품 {item.books}작 · 좋아요 {item.likes.toLocaleString()} · 성장률 {item.growth}
+              </p>
+            </div>
           </div>
         ))}
       </div>
