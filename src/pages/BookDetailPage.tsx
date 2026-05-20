@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, BookOpen, Users, Flag, X, Star, Pencil, Trash2 } from "lucide-react";
+import { Sparkles, BookOpen, Users, Flag, X, Star, Pencil, Trash2, MessageCircle } from "lucide-react";
 import {
   createBookReview,
   deleteBookReview,
@@ -229,7 +229,14 @@ const BookDetailPage = () => {
     <>
       <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6">
         <div className="max-w-6xl mx-auto space-y-4">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <a
+              href="#book-reviews"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-primary font-bold hover:bg-primary/15 transition-colors"
+            >
+              <MessageCircle size={16} />
+              리뷰 보기
+            </a>
             <button
               type="button"
               onClick={() => {
@@ -370,7 +377,7 @@ const BookDetailPage = () => {
                 </div>
               )}
 
-              <div className="space-y-5 pt-8 border-t border-on-surface-variant/10">
+              <div id="book-reviews" className="scroll-mt-28 space-y-5 pt-8 border-t border-on-surface-variant/10">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
                   <div>
                     <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2">
