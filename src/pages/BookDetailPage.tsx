@@ -377,7 +377,7 @@ const BookDetailPage = () => {
                 </div>
               )}
 
-              <div id="book-reviews" className="scroll-mt-28 space-y-5 pt-8 border-t border-on-surface-variant/10">
+              <div id="book-reviews" className="scroll-mt-24 md:scroll-mt-32 space-y-5 pt-8 border-t border-on-surface-variant/10">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
                   <div>
                     <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2">
