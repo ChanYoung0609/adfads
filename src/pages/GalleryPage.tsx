@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { BookOpen, Search, SlidersHorizontal, X, Heart } from "lucide-react";
-import { addBookLike, fetchBooks, removeBookLike, type BookItem } from "../lib/api";
+import { addBookLike, fetchBooks, fetchCategories, removeBookLike, type BookItem, type CategoryItem } from "../lib/api";
 
 const PAGE_SIZE = 12;
 type SortOption = "newest" | "titleAsc" | "titleDesc";
@@ -16,6 +16,8 @@ const GalleryPage = () => {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortOption>("newest");
   const [showFilters, setShowFilters] = useState(false);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number | "all">("all");
   const [likeLoadingMap, setLikeLoadingMap] = useState<LikeLoadingMap>({});
   const [likeErrorMessage, setLikeErrorMessage] = useState<string | null>(null);
 
@@ -62,6 +64,12 @@ const GalleryPage = () => {
   useEffect(() => {
     loadMore();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    fetchCategories()
+      .then(setCategories)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const el = observerRef.current;
@@ -197,6 +205,27 @@ const GalleryPage = () => {
                   </button>
                 ))}
               </div>
+
+              {categories.length > 0 && (
+                <>
+                  <p className="text-sm font-bold text-on-surface pt-1">카테고리</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[{ id: "all" as const, name: "전체" }, ...categories].map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                          selectedCategory === cat.id
+                            ? "bg-primary text-on-primary"
+                            : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
 
