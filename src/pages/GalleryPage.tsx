@@ -208,6 +208,7 @@ const GalleryPage = () => {
 
               {categories.length > 0 && (
                 <>
+                  //TODO 도서 목록을 필터링하거나 API를 호출
                   <p className="text-sm font-bold text-on-surface pt-1">카테고리</p>
                   <div className="flex flex-wrap gap-2">
                     {[{ id: "all" as const, name: "전체" }, ...categories].map((cat) => (
