@@ -164,6 +164,23 @@ export async function fetchMyBooks(
   return parseApiResponse(res, pageResponseSchema(myBookItemSchema), "내 책 목록 조회에 실패했습니다.");
 }
 
+// ── 카테고리 ──
+
+export interface CategoryItem {
+  id: number;
+  name: string;
+}
+
+const categoryItemSchema: z.ZodType<CategoryItem> = z.object({
+  id: z.number(),
+  name: z.string(),
+});
+
+export async function fetchCategories(): Promise<CategoryItem[]> {
+  const res = await fetchWithAuth("/api/categories", { method: "GET" });
+  return parseApiResponse(res, z.array(categoryItemSchema), "카테고리 목록 조회에 실패했습니다.");
+}
+
 // ── 도서 상세 ──
 
 export interface BookDetailPage {

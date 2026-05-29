@@ -2,7 +2,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { Sparkles, Flame, Clock3, ChevronLeft, ChevronRight } from "lucide-react";
-import { fetchBanners, fetchBooks, type BannerItem, type BookItem } from "../lib/api";
+import { fetchBanners, fetchBooks, fetchCategories, type BannerItem, type BookItem, type CategoryItem } from "../lib/api";
 import { isLoggedIn, fetchUserMe, removeAccessToken, clearUserCache } from "../lib/auth";
 
 const HERO_ILLUSTRATION = {
@@ -15,16 +15,6 @@ const FEATURE_ICONS = {
   illustration: "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/c700d0e7-62f1-4a9c-abfd-c8a353491136.png",
   complete: "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/84a114ed-8746-4090-921c-3008150764cb.png",
 };
-const CATEGORIES = [
-  { id: "all", label: "전체" },
-  { id: "fairy", label: "동화" },
-  { id: "fantasy", label: "판타지" },
-  { id: "adventure", label: "모험" },
-  { id: "daily", label: "일상" },
-  { id: "education", label: "교육" },
-  { id: "emotion", label: "감성" },
-] as const;
-
 type SliderSectionProps = {
   title: string;
   icon: React.ReactNode;
@@ -165,13 +155,20 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false, more
 const LandingPage = () => {
   const [books, setBooks] = useState<BookItem[]>([]);
   const [banners, setBanners] = useState<BannerItem[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number | "all">("all");
   const [bannerIndex, setBannerIndex] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchBooks(0, 20)
       .then((data) => setBooks(data.content))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchCategories()
+      .then(setCategories)
       .catch(() => {});
   }, []);
 
@@ -400,7 +397,8 @@ const LandingPage = () => {
             className="w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           >
             <div className="flex gap-2 md:gap-3 justify-start md:justify-center px-2 min-w-max md:min-w-0">
-              {CATEGORIES.map((cat) => (
+              //TODO 도서 목록을 필터링하거나 API를 호출
+              {[{ id: "all" as const, name: "전체" }, ...categories].map((cat) => (
                 <button
                   key={cat.id}
                   type="button"
@@ -411,7 +409,7 @@ const LandingPage = () => {
                       : "bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container border border-outline-variant/20"
                   }`}
                 >
-                  {cat.label}
+                  {cat.name}
                 </button>
               ))}
             </div>
