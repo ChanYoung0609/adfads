@@ -397,6 +397,7 @@ const LandingPage = () => {
             className="w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           >
             <div className="flex gap-2 md:gap-3 justify-start md:justify-center px-2 min-w-max md:min-w-0">
+              //TODO 도서 목록을 필터링하거나 API를 호출
               {[{ id: "all" as const, name: "전체" }, ...categories].map((cat) => (
                 <button
                   key={cat.id}
