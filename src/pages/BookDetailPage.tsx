@@ -281,7 +281,11 @@ const BookDetailPage = () => {
                     AI 그림책
                   </div>
                   <h2 className="text-3xl font-display font-bold leading-tight mb-2">{book.title}</h2>
-                  <p className="text-on-surface-variant text-base font-medium mb-2">{book.authorName} 작가</p>
+                  <p className="text-on-surface-variant text-base font-medium mb-2">
+                    <Link to={`/author/${encodeURIComponent(book.authorName)}`} className="hover:text-primary transition-colors">
+                      {book.authorName} 작가
+                    </Link>
+                  </p>
                   <div className="flex items-center gap-1.5 text-on-surface-variant">
                     <BookOpen size={16} />
                     <span className="text-sm font-medium">{book.pages.length} 페이지</span>
@@ -308,7 +312,9 @@ const BookDetailPage = () => {
                 </div>
                 <h1 className="text-6xl font-display font-bold leading-tight">{book.title}</h1>
                 <div className="flex items-center gap-4">
-                  <span className="font-bold">{book.authorName} 작가</span>
+                  <Link to={`/author/${encodeURIComponent(book.authorName)}`} className="font-bold hover:text-primary transition-colors">
+                    {book.authorName} 작가
+                  </Link>
                   <div className="h-4 w-[1px] bg-on-surface-variant/20" />
                   <div className="flex items-center gap-1.5 text-on-surface-variant">
                     <BookOpen size={18} />
