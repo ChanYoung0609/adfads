@@ -24,6 +24,7 @@ const ReaderDashboardPage = lazy(() => import("./pages/ReaderDashboardPage"));
 const ReaderLikedBooksPage = lazy(() => import("./pages/ReaderLikedBooksPage"));
 const RankingsPage = lazy(() => import("./pages/RankingsPage"));
 const StartPage = lazy(() => import("./pages/StartPage"));
+const AuthorProfilePage = lazy(() => import("./pages/AuthorProfilePage"));
 
 const RouteFallback = () => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -50,6 +51,7 @@ export default function App() {
               <Route path="/dashboard/reader" element={<ReaderDashboardPage />} />
               <Route path="/dashboard/reader/liked" element={<ReaderLikedBooksPage />} />
               <Route path="/book/:id" element={<BookDetailPage />} />
+              <Route path="/author/:id" element={<AuthorProfilePage />} />
               <Route path="/read/:id" element={<ReadingPage />} />
               <Route path="/create" element={<WizardPage />} />
               <Route path="/library" element={<LibraryPage />} />
