@@ -164,6 +164,37 @@ export async function fetchMyBooks(
   return parseApiResponse(res, pageResponseSchema(myBookItemSchema), "내 책 목록 조회에 실패했습니다.");
 }
 
+// ── 연도별 수익 ──
+
+export interface MonthlyRevenue {
+  month: number;
+  totalRevenue: number;
+}
+
+export interface YearlyRevenue {
+  year: number;
+  monthlyRevenues: MonthlyRevenue[];
+}
+
+const monthlyRevenueSchema: z.ZodType<MonthlyRevenue> = z.object({
+  month: z.number(),
+  totalRevenue: z.number(),
+});
+
+const yearlyRevenueSchema: z.ZodType<YearlyRevenue> = z.object({
+  year: z.number(),
+  monthlyRevenues: z.array(monthlyRevenueSchema),
+});
+
+export async function fetchMyRevenue(year?: number): Promise<YearlyRevenue> {
+  const params = new URLSearchParams();
+  if (year != null) params.set("year", String(year));
+  const query = params.toString();
+
+  const res = await fetchWithAuth(`/api/user/me/revenue${query ? `?${query}` : ""}`, { method: "GET" });
+  return parseApiResponse(res, yearlyRevenueSchema, "수익 조회에 실패했습니다.");
+}
+
 // ── 카테고리 ──
 
 export interface CategoryItem {

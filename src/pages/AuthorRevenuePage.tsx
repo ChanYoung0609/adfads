@@ -3,32 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowLeft, BarChart3, BookOpen } from "lucide-react";
 import { isLoggedIn } from "../lib/auth";
-
-const yearlyRevenueData = [
-  { month: "1월", revenue: 22000 },
-  { month: "2월", revenue: 28000 },
-  { month: "3월", revenue: 36000 },
-  { month: "4월", revenue: 41000 },
-  { month: "5월", revenue: 52000 },
-  { month: "6월", revenue: 66000 },
-  { month: "7월", revenue: 57000 },
-  { month: "8월", revenue: 62000 },
-  { month: "9월", revenue: 73000 },
-  { month: "10월", revenue: 68000 },
-  { month: "11월", revenue: 76000 },
-  { month: "12월", revenue: 81000 },
-];
-
-const getRevenueDataByYear = (year: number) => {
-  const yearOffset = year - 2026;
-  const growthFactor = 1 + yearOffset * 0.06;
-
-  return yearlyRevenueData.map((item, index) => {
-    const seasonalFactor = index % 4 === 0 ? 0.97 : index % 3 === 0 ? 1.04 : 1;
-    const value = Math.max(8000, Math.round(item.revenue * growthFactor * seasonalFactor));
-    return { month: item.month, revenue: Math.round(value / 100) * 100 };
-  });
-};
+import { fetchMyRevenue } from "../lib/api";
 
 const bookSalesData = [
   { id: "1", title: "별빛 요정의 모험", monthly: [8, 10, 12, 14, 15, 18, 16, 17, 19, 21, 20, 22] },
@@ -54,14 +29,37 @@ const getBookMonthlySalesByYear = (bookId: string, year: number) => {
 const AuthorRevenuePage = () => {
   const navigate = useNavigate();
   const [chartType, setChartType] = useState<"revenue" | "sales">("revenue");
-  const [selectedYear, setSelectedYear] = useState(2026);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedBookId, setSelectedBookId] = useState(bookSalesData[0].id);
+  const [monthlyRevenues, setMonthlyRevenues] = useState<number[]>(Array(12).fill(0));
 
   useEffect(() => {
     if (!isLoggedIn()) navigate("/login");
   }, [navigate]);
 
-  const revenueData = useMemo(() => getRevenueDataByYear(selectedYear), [selectedYear]);
+  useEffect(() => {
+    let cancelled = false;
+    fetchMyRevenue(selectedYear)
+      .then((data) => {
+        if (cancelled) return;
+        const next = Array(12).fill(0);
+        data.monthlyRevenues.forEach((item) => {
+          if (item.month >= 1 && item.month <= 12) next[item.month - 1] = item.totalRevenue;
+        });
+        setMonthlyRevenues(next);
+      })
+      .catch(() => {
+        if (!cancelled) setMonthlyRevenues(Array(12).fill(0));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedYear]);
+
+  const revenueData = useMemo(
+    () => monthLabels.map((month, index) => ({ month, revenue: monthlyRevenues[index] })),
+    [monthlyRevenues],
+  );
   const selectedBook = useMemo(
     () => bookSalesData.find((book) => book.id === selectedBookId) ?? bookSalesData[0],
     [selectedBookId],
@@ -71,7 +69,7 @@ const AuthorRevenuePage = () => {
     [selectedBookId, selectedYear],
   );
 
-  const maxMonthlyRevenue = Math.max(...revenueData.map((item) => item.revenue));
+  const maxMonthlyRevenue = Math.max(1, ...revenueData.map((item) => item.revenue));
   const maxMonthlyBookSales = Math.max(...selectedBookMonthlySales.map((item) => item.sold));
 
   return (
