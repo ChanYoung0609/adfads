@@ -195,6 +195,63 @@ export async function fetchMyRevenue(year?: number): Promise<YearlyRevenue> {
   return parseApiResponse(res, yearlyRevenueSchema, "수익 조회에 실패했습니다.");
 }
 
+// ── 작가 대시보드: 요약 / 작품별 성과 ──
+
+export interface AuthorSummary {
+  totalRevenue: number;
+  monthlyRevenue: number;
+  publishedBookCount: number;
+  inProgressBookCount: number;
+  totalViewCount: number;
+  averageBookRating: number;
+}
+
+export interface BookPerformanceItem {
+  bookId: string;
+  title: string;
+  visibility: "PRIVATE" | "PUBLIC";
+  viewCount: number;
+  likeCount: number;
+  averageRating: number;
+  totalRevenue: number;
+}
+
+const authorSummarySchema: z.ZodType<AuthorSummary> = z.object({
+  totalRevenue: z.number(),
+  monthlyRevenue: z.number(),
+  publishedBookCount: z.number(),
+  inProgressBookCount: z.number(),
+  totalViewCount: z.number(),
+  averageBookRating: z.number(),
+});
+
+const bookPerformanceItemSchema: z.ZodType<BookPerformanceItem> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  visibility: z.enum(["PRIVATE", "PUBLIC"]),
+  viewCount: z.number(),
+  likeCount: z.number(),
+  averageRating: z.number(),
+  totalRevenue: z.number(),
+});
+
+export async function fetchMySummary(): Promise<AuthorSummary> {
+  const res = await fetchWithAuth("/api/user/me/summary", { method: "GET" });
+  return parseApiResponse(res, authorSummarySchema, "작가 요약 정보 조회에 실패했습니다.");
+}
+
+export async function fetchMyBookPerformance(
+  page = 0,
+  size = 10
+): Promise<CursorPageResponse<BookPerformanceItem>> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(size));
+
+  const res = await fetchWithAuth(`/api/books/me/performance?${params.toString()}`, { method: "GET" });
+  return parseApiResponse(res, cursorPageResponseSchema(bookPerformanceItemSchema), "작품별 성과 조회에 실패했습니다.");
+}
+
 // ── 카테고리 ──
 
 export interface CategoryItem {

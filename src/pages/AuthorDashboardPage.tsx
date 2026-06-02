@@ -13,44 +13,51 @@ import {
   Crown,
 } from "lucide-react";
 import { isLoggedIn } from "../lib/auth";
+import {
+  fetchMySummary,
+  fetchMyBookPerformance,
+  type AuthorSummary,
+  type BookPerformanceItem,
+} from "../lib/api";
 
-const mockAuthorStats = {
-  totalBooks: 12,
-  publishedBooks: 8,
-  draftBooks: 4,
-  totalRevenue: 245_000,
-  monthlyRevenue: 48_000,
-  totalReads: 1_580,
-  totalLikes: 342,
-  avgRating: 4.6,
-};
-
-const mockBookPerformance = [
-  { id: "1", title: "별빛 요정의 모험", reads: 520, likes: 128, revenue: 82_000, isPaid: true, rating: 4.8 },
-  { id: "2", title: "숲속 친구들", reads: 380, likes: 95, revenue: 65_000, isPaid: true, rating: 4.5 },
-  { id: "3", title: "바다 위의 별", reads: 290, likes: 67, revenue: 0, isPaid: false, rating: 4.7 },
-  { id: "4", title: "구름 위의 집", reads: 210, likes: 52, revenue: 48_000, isPaid: true, rating: 4.3 },
-];
-
-type PerformanceSort = "title" | "reads" | "likes" | "rating" | "revenue";
+type PerformanceSort = "title" | "viewCount" | "likeCount" | "averageRating" | "totalRevenue";
 type SortOrder = "asc" | "desc";
 
 const AuthorDashboardPage = () => {
   const navigate = useNavigate();
-  const [performanceSort, setPerformanceSort] = useState<PerformanceSort>("reads");
+  const [performanceSort, setPerformanceSort] = useState<PerformanceSort>("viewCount");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [summary, setSummary] = useState<AuthorSummary | null>(null);
+  const [books, setBooks] = useState<BookPerformanceItem[]>([]);
 
   useEffect(() => {
     if (!isLoggedIn()) navigate("/login");
   }, [navigate]);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetchMySummary()
+      .then((data) => {
+        if (!cancelled) setSummary(data);
+      })
+      .catch(() => {});
+    fetchMyBookPerformance(0, 10)
+      .then((data) => {
+        if (!cancelled) setBooks(data.items);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const sortedBooks = useMemo(() => {
     const orderFactor = sortOrder === "asc" ? 1 : -1;
     if (performanceSort === "title") {
-      return [...mockBookPerformance].sort((a, b) => a.title.localeCompare(b.title) * orderFactor);
+      return [...books].sort((a, b) => a.title.localeCompare(b.title) * orderFactor);
     }
-    return [...mockBookPerformance].sort((a, b) => (a[performanceSort] - b[performanceSort]) * orderFactor);
-  }, [performanceSort, sortOrder]);
+    return [...books].sort((a, b) => (a[performanceSort] - b[performanceSort]) * orderFactor);
+  }, [books, performanceSort, sortOrder]);
 
   const onClickSortHeader = (key: PerformanceSort) => {
     if (performanceSort === key) {
@@ -87,20 +94,20 @@ const AuthorDashboardPage = () => {
           >
             <DollarSign size={28} className="mb-3" />
             <p className="text-on-primary/70 text-sm">총 수익</p>
-            <p className="text-4xl font-headline font-extrabold mt-1">{mockAuthorStats.totalRevenue.toLocaleString()}원</p>
+            <p className="text-4xl font-headline font-extrabold mt-1">{(summary?.totalRevenue ?? 0).toLocaleString()}원</p>
             <div className="flex items-center gap-2 mt-3 text-on-primary/80 text-sm">
               <TrendingUp size={14} />
-              이번 달 +{mockAuthorStats.monthlyRevenue.toLocaleString()}원
+              이번 달 +{(summary?.monthlyRevenue ?? 0).toLocaleString()}원
             </div>
             <p className="mt-4 text-xs text-on-primary/80">클릭해서 월별/작품별 수익 그래프 보기</p>
           </motion.div>
 
           <div className="grid grid-cols-2 gap-4">
             {[
-              { label: "출판 작품", value: mockAuthorStats.publishedBooks, icon: BookOpen },
-              { label: "작성 중", value: mockAuthorStats.draftBooks, icon: PenTool },
-              { label: "총 조회수", value: mockAuthorStats.totalReads.toLocaleString(), icon: Eye },
-              { label: "평균 평점", value: mockAuthorStats.avgRating, icon: Star },
+              { label: "출판 작품", value: summary?.publishedBookCount ?? 0, icon: BookOpen },
+              { label: "작성 중", value: summary?.inProgressBookCount ?? 0, icon: PenTool },
+              { label: "총 조회수", value: (summary?.totalViewCount ?? 0).toLocaleString(), icon: Eye },
+              { label: "평균 평점", value: summary?.averageBookRating ?? 0, icon: Star },
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -128,10 +135,10 @@ const AuthorDashboardPage = () => {
           <div className="hidden md:grid grid-cols-12 gap-4 px-4 pb-3 text-sm md:text-base font-bold text-on-surface-variant uppercase tracking-wider">
             {([
               { key: "title", label: "작품", className: "col-span-4 text-left" },
-              { key: "reads", label: "조회수", className: "col-span-2 text-right" },
-              { key: "likes", label: "좋아요", className: "col-span-2 text-right" },
-              { key: "rating", label: "평점", className: "col-span-2 text-right" },
-              { key: "revenue", label: "수익", className: "col-span-2 text-right" },
+              { key: "viewCount", label: "조회수", className: "col-span-2 text-right" },
+              { key: "likeCount", label: "좋아요", className: "col-span-2 text-right" },
+              { key: "averageRating", label: "평점", className: "col-span-2 text-right" },
+              { key: "totalRevenue", label: "수익", className: "col-span-2 text-right" },
             ] as const).map((header) => (
               <button
                 key={header.key}
@@ -147,47 +154,55 @@ const AuthorDashboardPage = () => {
           </div>
 
           <div className="space-y-3">
-            {sortedBooks.map((book, i) => (
-              <motion.div
-                key={book.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 p-4 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors items-center"
-              >
-                <div className="md:col-span-4 flex items-center gap-3">
-                  <span className="text-sm font-bold text-on-surface-variant w-6">{i + 1}</span>
-                  <div className="min-w-0">
-                    <p className="font-bold text-on-surface truncate">{book.title}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {book.isPaid && (
-                        <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <Crown size={8} /> 유료
-                        </span>
-                      )}
+            {sortedBooks.length === 0 ? (
+              <div className="py-12 text-center text-on-surface-variant text-sm">아직 등록된 작품이 없어요.</div>
+            ) : (
+              sortedBooks.map((book, i) => (
+                <motion.div
+                  key={book.bookId}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 p-4 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors items-center"
+                >
+                  <div className="md:col-span-4 flex items-center gap-3">
+                    <span className="text-sm font-bold text-on-surface-variant w-6">{i + 1}</span>
+                    <div className="min-w-0">
+                      <p className="font-bold text-on-surface truncate">{book.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {book.visibility === "PUBLIC" ? (
+                          <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Crown size={8} /> 유료
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full">
+                            무료
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="md:col-span-2 md:text-right flex md:block items-center gap-2">
-                  <span className="md:hidden text-xs text-on-surface-variant">조회수</span>
-                  <p className="font-bold text-on-surface">{book.reads.toLocaleString()}</p>
-                </div>
-                <div className="md:col-span-2 md:text-right flex md:block items-center gap-2">
-                  <span className="md:hidden text-xs text-on-surface-variant">좋아요</span>
-                  <p className="font-bold text-on-surface">{book.likes}</p>
-                </div>
-                <div className="md:col-span-2 md:text-right flex md:block items-center gap-2">
-                  <span className="md:hidden text-xs text-on-surface-variant">평점</span>
-                  <p className="font-bold text-on-surface flex items-center gap-1 md:justify-end">
-                    <Star size={12} className="text-yellow-500 fill-yellow-500" /> {book.rating}
-                  </p>
-                </div>
-                <div className="md:col-span-2 md:text-right flex md:block items-center gap-2">
-                  <span className="md:hidden text-xs text-on-surface-variant">수익</span>
-                  <p className="font-bold text-on-surface">{book.revenue > 0 ? `${book.revenue.toLocaleString()}원` : "-"}</p>
-                </div>
-              </motion.div>
-            ))}
+                  <div className="md:col-span-2 md:text-right flex md:block items-center gap-2">
+                    <span className="md:hidden text-xs text-on-surface-variant">조회수</span>
+                    <p className="font-bold text-on-surface">{book.viewCount.toLocaleString()}</p>
+                  </div>
+                  <div className="md:col-span-2 md:text-right flex md:block items-center gap-2">
+                    <span className="md:hidden text-xs text-on-surface-variant">좋아요</span>
+                    <p className="font-bold text-on-surface">{book.likeCount}</p>
+                  </div>
+                  <div className="md:col-span-2 md:text-right flex md:block items-center gap-2">
+                    <span className="md:hidden text-xs text-on-surface-variant">평점</span>
+                    <p className="font-bold text-on-surface flex items-center gap-1 md:justify-end">
+                      <Star size={12} className="text-yellow-500 fill-yellow-500" /> {book.averageRating}
+                    </p>
+                  </div>
+                  <div className="md:col-span-2 md:text-right flex md:block items-center gap-2">
+                    <span className="md:hidden text-xs text-on-surface-variant">수익</span>
+                    <p className="font-bold text-on-surface">{book.totalRevenue > 0 ? `${book.totalRevenue.toLocaleString()}원` : "-"}</p>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
 
