@@ -560,6 +560,36 @@ export async function removeBookLike(bookId: string): Promise<BookLikeStatus> {
   return handleBookLikeAction(bookId, "DELETE", "좋아요 취소에 실패했습니다.");
 }
 
+// ── 작가 팔로우 ──
+
+export interface AuthorFollowStatus {
+  authorId: string;
+  followerCount: number;
+  followedByMe: boolean;
+}
+
+const authorFollowStatusSchema: z.ZodType<AuthorFollowStatus> = z.object({
+  authorId: z.string(),
+  followerCount: z.number(),
+  followedByMe: z.boolean(),
+});
+
+// 인증 선택: 비로그인 시 followedByMe는 false로 내려온다.
+export async function fetchAuthorFollowStatus(authorId: string): Promise<AuthorFollowStatus> {
+  const res = await fetchWithAuth(`/api/authors/${authorId}/follow`, { method: "GET" });
+  return parseApiResponse(res, authorFollowStatusSchema, "팔로우 상태 조회에 실패했습니다.");
+}
+
+export async function followAuthor(authorId: string): Promise<AuthorFollowStatus> {
+  const res = await fetchWithAuth(`/api/authors/${authorId}/follow`, { method: "POST" });
+  return parseApiResponse(res, authorFollowStatusSchema, "팔로우에 실패했습니다.");
+}
+
+export async function unfollowAuthor(authorId: string): Promise<AuthorFollowStatus> {
+  const res = await fetchWithAuth(`/api/authors/${authorId}/follow`, { method: "DELETE" });
+  return parseApiResponse(res, authorFollowStatusSchema, "팔로우 취소에 실패했습니다.");
+}
+
 export async function fetchReadingProgress(bookId: string): Promise<ReadingProgress> {
   const res = await fetchWithAuth(`/api/books/${bookId}/reading-progress`, { method: "GET" });
   return parseApiResponse(res, readingProgressSchema, "내 진행도 조회에 실패했습니다.");
