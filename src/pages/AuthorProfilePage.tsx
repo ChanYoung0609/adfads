@@ -1,7 +1,9 @@
-import { useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { ArrowLeft, BookOpen, Heart, PenTool, Sparkles, Star, UserPlus } from "lucide-react";
+import { ArrowLeft, BookOpen, Heart, PenTool, Sparkles, Star, UserCheck, UserPlus } from "lucide-react";
+import { isLoggedIn } from "../lib/auth";
+import { fetchAuthorFollowStatus, followAuthor, unfollowAuthor } from "../lib/api";
 
 interface AuthorBookMock {
   bookId: string;
@@ -88,17 +90,57 @@ const MOCK_AUTHORS: Record<string, AuthorProfileMock> = {
 
 const AuthorProfilePage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const author = useMemo<AuthorProfileMock>(() => {
     if (id && MOCK_AUTHORS[id]) return MOCK_AUTHORS[id];
     return { ...MOCK_AUTHORS.default, userId: id ?? "default" };
   }, [id]);
 
+  const [following, setFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState<number | null>(null);
+  const [followPending, setFollowPending] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    fetchAuthorFollowStatus(id)
+      .then((status) => {
+        if (cancelled) return;
+        setFollowing(status.followedByMe);
+        setFollowerCount(status.followerCount);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  const handleToggleFollow = async () => {
+    if (!id || followPending) return;
+    if (!isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
+    setFollowPending(true);
+    try {
+      const status = following ? await unfollowAuthor(id) : await followAuthor(id);
+      setFollowing(status.followedByMe);
+      setFollowerCount(status.followerCount);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "요청에 실패했습니다.");
+    } finally {
+      setFollowPending(false);
+    }
+  };
+
+  const displayedFollowers = followerCount ?? author.stats.followers;
+
   const statCards = [
     { label: "작품 수", value: author.stats.bookCount.toLocaleString(), icon: BookOpen },
     { label: "총 좋아요", value: author.stats.totalLikes.toLocaleString(), icon: Heart },
     { label: "평균 평점", value: author.stats.averageRating.toFixed(1), icon: Star },
-    { label: "팔로워", value: author.stats.followers.toLocaleString(), icon: UserPlus },
+    { label: "팔로워", value: displayedFollowers.toLocaleString(), icon: UserPlus },
   ];
 
   return (
@@ -146,10 +188,16 @@ const AuthorProfilePage = () => {
             <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto">
               <button
                 type="button"
-                className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-on-primary font-bold shadow-lg hover:bg-secondary transition-colors"
+                onClick={handleToggleFollow}
+                disabled={followPending}
+                className={`flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold shadow-lg transition-colors disabled:opacity-60 ${
+                  following
+                    ? "border border-outline-variant/40 bg-white text-on-surface hover:bg-surface-container-low"
+                    : "bg-primary text-on-primary hover:bg-secondary"
+                }`}
               >
-                <UserPlus size={16} />
-                팔로우
+                {following ? <UserCheck size={16} /> : <UserPlus size={16} />}
+                {following ? "팔로잉" : "팔로우"}
               </button>
               <button
                 type="button"

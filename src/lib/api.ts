@@ -164,6 +164,94 @@ export async function fetchMyBooks(
   return parseApiResponse(res, pageResponseSchema(myBookItemSchema), "내 책 목록 조회에 실패했습니다.");
 }
 
+// ── 연도별 수익 ──
+
+export interface MonthlyRevenue {
+  month: number;
+  totalRevenue: number;
+}
+
+export interface YearlyRevenue {
+  year: number;
+  monthlyRevenues: MonthlyRevenue[];
+}
+
+const monthlyRevenueSchema: z.ZodType<MonthlyRevenue> = z.object({
+  month: z.number(),
+  totalRevenue: z.number(),
+});
+
+const yearlyRevenueSchema: z.ZodType<YearlyRevenue> = z.object({
+  year: z.number(),
+  monthlyRevenues: z.array(monthlyRevenueSchema),
+});
+
+export async function fetchMyRevenue(year?: number): Promise<YearlyRevenue> {
+  const params = new URLSearchParams();
+  if (year != null) params.set("year", String(year));
+  const query = params.toString();
+
+  const res = await fetchWithAuth(`/api/user/me/revenue${query ? `?${query}` : ""}`, { method: "GET" });
+  return parseApiResponse(res, yearlyRevenueSchema, "수익 조회에 실패했습니다.");
+}
+
+// ── 작가 대시보드: 요약 / 작품별 성과 ──
+
+export interface AuthorSummary {
+  totalRevenue: number;
+  monthlyRevenue: number;
+  publishedBookCount: number;
+  inProgressBookCount: number;
+  totalViewCount: number;
+  averageBookRating: number;
+}
+
+export interface BookPerformanceItem {
+  bookId: string;
+  title: string;
+  visibility: "PRIVATE" | "PUBLIC";
+  viewCount: number;
+  likeCount: number;
+  averageRating: number;
+  totalRevenue: number;
+}
+
+const authorSummarySchema: z.ZodType<AuthorSummary> = z.object({
+  totalRevenue: z.number(),
+  monthlyRevenue: z.number(),
+  publishedBookCount: z.number(),
+  inProgressBookCount: z.number(),
+  totalViewCount: z.number(),
+  averageBookRating: z.number(),
+});
+
+const bookPerformanceItemSchema: z.ZodType<BookPerformanceItem> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  visibility: z.enum(["PRIVATE", "PUBLIC"]),
+  viewCount: z.number(),
+  likeCount: z.number(),
+  averageRating: z.number(),
+  totalRevenue: z.number(),
+});
+
+export async function fetchMySummary(): Promise<AuthorSummary> {
+  const res = await fetchWithAuth("/api/user/me/summary", { method: "GET" });
+  return parseApiResponse(res, authorSummarySchema, "작가 요약 정보 조회에 실패했습니다.");
+}
+
+export async function fetchMyBookPerformance(
+  page = 0,
+  size = 10
+): Promise<CursorPageResponse<BookPerformanceItem>> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(size));
+
+  const res = await fetchWithAuth(`/api/books/me/performance?${params.toString()}`, { method: "GET" });
+  return parseApiResponse(res, cursorPageResponseSchema(bookPerformanceItemSchema), "작품별 성과 조회에 실패했습니다.");
+}
+
 // ── 카테고리 ──
 
 export interface CategoryItem {
@@ -470,6 +558,36 @@ export async function addBookLike(bookId: string): Promise<BookLikeStatus> {
 
 export async function removeBookLike(bookId: string): Promise<BookLikeStatus> {
   return handleBookLikeAction(bookId, "DELETE", "좋아요 취소에 실패했습니다.");
+}
+
+// ── 작가 팔로우 ──
+
+export interface AuthorFollowStatus {
+  authorId: string;
+  followerCount: number;
+  followedByMe: boolean;
+}
+
+const authorFollowStatusSchema: z.ZodType<AuthorFollowStatus> = z.object({
+  authorId: z.string(),
+  followerCount: z.number(),
+  followedByMe: z.boolean(),
+});
+
+// 인증 선택: 비로그인 시 followedByMe는 false로 내려온다.
+export async function fetchAuthorFollowStatus(authorId: string): Promise<AuthorFollowStatus> {
+  const res = await fetchWithAuth(`/api/authors/${authorId}/follow`, { method: "GET" });
+  return parseApiResponse(res, authorFollowStatusSchema, "팔로우 상태 조회에 실패했습니다.");
+}
+
+export async function followAuthor(authorId: string): Promise<AuthorFollowStatus> {
+  const res = await fetchWithAuth(`/api/authors/${authorId}/follow`, { method: "POST" });
+  return parseApiResponse(res, authorFollowStatusSchema, "팔로우에 실패했습니다.");
+}
+
+export async function unfollowAuthor(authorId: string): Promise<AuthorFollowStatus> {
+  const res = await fetchWithAuth(`/api/authors/${authorId}/follow`, { method: "DELETE" });
+  return parseApiResponse(res, authorFollowStatusSchema, "팔로우 취소에 실패했습니다.");
 }
 
 export async function fetchReadingProgress(bookId: string): Promise<ReadingProgress> {
