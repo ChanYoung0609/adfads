@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
+import ChunkErrorBoundary from "./components/ChunkErrorBoundary";
 
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const GalleryPage = lazy(() => import("./pages/GalleryPage"));
@@ -32,6 +33,19 @@ const RouteFallback = () => (
   </div>
 );
 
+const ChunkErrorFallback = () => (
+  <div className="min-h-[50vh] flex flex-col items-center justify-center gap-4 text-center px-4">
+    <p className="text-on-surface-variant">페이지를 불러오지 못했어요. 새로고침해 주세요.</p>
+    <button
+      type="button"
+      onClick={() => window.location.reload()}
+      className="px-6 py-2.5 bg-primary text-on-primary rounded-full font-bold"
+    >
+      새로고침
+    </button>
+  </div>
+);
+
 export default function App() {
   return (
     <Router>
@@ -39,6 +53,7 @@ export default function App() {
       <div className="min-h-screen bg-background selection:bg-primary/20 selection:text-primary flex flex-col">
         <Navbar />
         <main className="flex-grow pb-24 md:pb-0">
+          <ChunkErrorBoundary fallback={<ChunkErrorFallback />}>
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
@@ -65,6 +80,7 @@ export default function App() {
               <Route path="*" element={<UnderConstructionPage />} />
             </Routes>
           </Suspense>
+          </ChunkErrorBoundary>
         </main>
         <div className="hidden md:block">
           <Footer />
