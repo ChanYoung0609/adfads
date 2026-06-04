@@ -9,7 +9,7 @@ export interface UserInfo {
   email: string;
   nickname: string;
   profileImage: string;
-  isNewUser: boolean;
+  isNewUser?: boolean;
 }
 
 const userInfoSchema: z.ZodType<UserInfo> = z.object({
@@ -17,7 +17,8 @@ const userInfoSchema: z.ZodType<UserInfo> = z.object({
   email: z.string(),
   nickname: z.string(),
   profileImage: z.string(),
-  isNewUser: z.boolean(),
+  // /api/user/me 응답엔 isNewUser가 없다(OAuth 콜백 전용 값). 필수로 두면 검증 실패로 로그인 표시가 안 됨.
+  isNewUser: z.boolean().optional(),
 });
 
 function parseUserInfo(data: unknown): UserInfo | null {
