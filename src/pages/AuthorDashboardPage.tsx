@@ -10,7 +10,6 @@ import {
   ArrowLeft,
   PenTool,
   BarChart3,
-  Crown,
 } from "lucide-react";
 import { isLoggedIn } from "../lib/auth";
 import {
@@ -172,11 +171,11 @@ const AuthorDashboardPage = () => {
                       <div className="flex items-center gap-2 mt-0.5">
                         {book.visibility === "PUBLIC" ? (
                           <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <Crown size={8} /> 유료
+                            <Eye size={8} /> 공개
                           </span>
                         ) : (
                           <span className="text-[10px] font-bold bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-full">
-                            무료
+                            비공개
                           </span>
                         )}
                       </div>
