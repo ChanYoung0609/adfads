@@ -146,6 +146,27 @@ const GalleryPage = () => {
           </p>
         </div>
 
+        {categories.length > 0 && (
+          <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="flex gap-2 md:gap-3 px-1 min-w-max">
+              {[{ id: "all" as const, name: "전체" }, ...categories].map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-5 py-2.5 md:px-6 md:py-3 rounded-full text-sm md:text-base font-bold transition-all whitespace-nowrap ${
+                    selectedCategory === cat.id
+                      ? "bg-primary text-on-primary shadow-lg"
+                      : "bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container border border-outline-variant/20"
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="space-y-4">
           <div className="flex items-center gap-3 bg-surface-container-lowest rounded-2xl border-2 border-outline-variant/30 focus-within:border-primary transition-colors px-4 md:px-5 py-3 md:py-4 shadow-sm">
             <Search size={20} className="text-on-surface-variant flex-shrink-0" />
@@ -205,28 +226,6 @@ const GalleryPage = () => {
                   </button>
                 ))}
               </div>
-
-              {categories.length > 0 && (
-                <>
-                  //TODO 도서 목록을 필터링하거나 API를 호출
-                  <p className="text-sm font-bold text-on-surface pt-1">카테고리</p>
-                  <div className="flex flex-wrap gap-2">
-                    {[{ id: "all" as const, name: "전체" }, ...categories].map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
-                          selectedCategory === cat.id
-                            ? "bg-primary text-on-primary"
-                            : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
-                        }`}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
             </motion.div>
           )}
 
