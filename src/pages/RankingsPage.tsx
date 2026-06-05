@@ -187,9 +187,9 @@ const AuthorSection = ({ title, icon, items, metric }: AuthorSectionProps) => {
           const rank = (index + 1) as 1 | 2 | 3;
 
           return (
-            <div key={item.id} className="flex-1 min-w-0">
+            <Link key={item.id} to={`/author/${item.id}`} className="group flex-1 min-w-0">
               <div className="mb-2 px-2 py-1 rounded-xl bg-surface-container border border-outline-variant/20 text-center">
-                <p className="text-xs font-bold text-on-surface truncate">{item.name}</p>
+                <p className="text-xs font-bold text-on-surface truncate group-hover:text-primary transition-colors">{item.name}</p>
               </div>
               <motion.div
                 className="mb-2 flex justify-center"
@@ -214,7 +214,7 @@ const AuthorSection = ({ title, icon, items, metric }: AuthorSectionProps) => {
               >
                 <span className="text-3xl md:text-4xl font-black leading-none">{rank}</span>
               </motion.div>
-            </div>
+            </Link>
           );
         })}
       </div>
@@ -222,7 +222,11 @@ const AuthorSection = ({ title, icon, items, metric }: AuthorSectionProps) => {
       <div className="space-y-2">
         {items.length === 0 && <p className="rounded-xl bg-surface-container-low p-4 text-sm text-on-surface-variant">아직 랭킹 데이터가 없어요.</p>}
         {items.map((item, i) => (
-          <div key={item.id} className="rounded-xl bg-surface-container-low border border-outline-variant/15 p-3 flex items-center gap-3">
+          <Link
+            key={item.id}
+            to={`/author/${item.id}`}
+            className="group rounded-xl bg-surface-container-low border border-outline-variant/15 p-3 flex items-center gap-3 hover:bg-surface-container transition-colors"
+          >
             <img
               src={item.profileImage || fallbackProfileImage}
               alt={`${item.name} 프로필`}
@@ -231,14 +235,14 @@ const AuthorSection = ({ title, icon, items, metric }: AuthorSectionProps) => {
               decoding="async"
             />
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-on-surface truncate">
+              <p className="font-semibold text-on-surface truncate group-hover:text-primary transition-colors">
                 {rankBadge[i]} {item.name}
               </p>
               <p className="text-xs text-on-surface-variant mt-1">
                 {metric === "books" ? `작품 ${item.books.toLocaleString()}권` : `좋아요 ${item.likes.toLocaleString()}개`}
               </p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </motion.section>
@@ -271,9 +275,9 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
           const rank = (index + 1) as 1 | 2 | 3;
 
           return (
-            <div key={item.id} className="flex-1 min-w-0">
+            <Link key={item.id} to={`/book/${item.id}`} className="group flex-1 min-w-0">
               <div className="mb-2 px-2 py-1 rounded-xl bg-surface-container border border-outline-variant/20 text-center">
-                <p className="text-xs font-bold text-on-surface truncate">{item.title}</p>
+                <p className="text-xs font-bold text-on-surface truncate group-hover:text-primary transition-colors">{item.title}</p>
               </div>
               <motion.div
                 className="mb-2 flex justify-center"
@@ -298,7 +302,7 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
               >
                 <span className="text-3xl md:text-4xl font-black leading-none">{rank}</span>
               </motion.div>
-            </div>
+            </Link>
           );
         })}
       </div>
