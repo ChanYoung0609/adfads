@@ -113,10 +113,6 @@ redirectToKakaoLogin()    # 카카오 OAuth 리다이렉트
 redirectToNaverLogin()    # 네이버 OAuth 리다이렉트
 ```
 
-**토큰 플로우:**
-- 로그인 → OAuth 콜백 → accessToken을 localStorage에 저장
-- API 요청 시 `Authorization: Bearer {token}` 헤더
-- 401 응답 시 자동으로 `/api/auth/refresh` 호출 후 재시도
 
 ### `api.ts` — 책 API
 
@@ -137,11 +133,6 @@ uploadUserFile(file)                              # 위 두 단계를 합친 함
 1. 백엔드에 프리사인드 URL 요청 (`POST /api/storage/presigned-upload`)
 2. 받은 URL로 MinIO에 직접 PUT 업로드
 3. `publicUrl`을 프론트에서 저장/표시
-
-### `demoData.ts` — 데모 데이터
-
-- `demoBooks`: 샘플 책 12권
-- `demoPaidBooks` / `demoFreeBooks` / `demoPopularBooks`: 필터된 서브셋
 
 ### `utils.ts` — 유틸리티
 
