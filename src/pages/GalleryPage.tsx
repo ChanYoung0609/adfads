@@ -1,8 +1,9 @@
 ﻿import { useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { BookOpen, Search, SlidersHorizontal, X, Heart } from "lucide-react";
 import { addBookLike, fetchBooks, fetchCategories, removeBookLike, type BookItem, type CategoryItem } from "../lib/api";
+import { isLoggedIn } from "../lib/auth";
 
 const PAGE_SIZE = 12;
 type SortOption = "newest" | "titleAsc" | "titleDesc";
@@ -10,6 +11,7 @@ type SortOption = "newest" | "titleAsc" | "titleDesc";
 type LikeLoadingMap = Record<string, boolean>;
 
 const GalleryPage = () => {
+  const navigate = useNavigate();
   const [books, setBooks] = useState<BookItem[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -116,6 +118,13 @@ const GalleryPage = () => {
   const toggleLike = async (bookId: string) => {
     if (likeLoadingMap[bookId]) return;
 
+    if (!isLoggedIn()) {
+      if (window.confirm("로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?")) {
+        navigate("/login");
+      }
+      return;
+    }
+
     const book = books.find((b) => b.bookId === bookId);
     const liked = book?.liked ?? false;
 
@@ -144,6 +153,25 @@ const GalleryPage = () => {
           <p className="text-on-surface-variant text-base md:text-lg max-w-xl">
             우리 커뮤니티가 만든 AI 생성 이야기를 만나보세요. 동화부터 모험까지 다양한 작품이 준비되어 있어요.
           </p>
+        </div>
+
+        <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex gap-2 md:gap-3 px-1 min-w-max">
+            {[{ id: "all" as const, name: "전체" }, ...categories].map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-5 py-2.5 md:px-6 md:py-3 rounded-full text-sm md:text-base font-bold transition-all whitespace-nowrap ${
+                  selectedCategory === cat.id
+                    ? "bg-primary text-on-primary shadow-lg"
+                    : "bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container border border-outline-variant/20"
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -205,28 +233,6 @@ const GalleryPage = () => {
                   </button>
                 ))}
               </div>
-
-              {categories.length > 0 && (
-                <>
-                  //TODO 도서 목록을 필터링하거나 API를 호출
-                  <p className="text-sm font-bold text-on-surface pt-1">카테고리</p>
-                  <div className="flex flex-wrap gap-2">
-                    {[{ id: "all" as const, name: "전체" }, ...categories].map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
-                          selectedCategory === cat.id
-                            ? "bg-primary text-on-primary"
-                            : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
-                        }`}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
             </motion.div>
           )}
 
