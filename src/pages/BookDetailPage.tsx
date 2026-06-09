@@ -70,10 +70,18 @@ const BookDetailPage = () => {
 
   useEffect(() => {
     if (!id) return;
+    let active = true;
     setLikeStatus(null);
     fetchBookLikeStatus(id)
-      .then((status) => setLikeStatus(status))
-      .catch(() => setLikeStatus(null));
+      .then((status) => {
+        if (active) setLikeStatus(status);
+      })
+      .catch(() => {
+        if (active) setLikeStatus(null);
+      });
+    return () => {
+      active = false;
+    };
   }, [id]);
 
   const toggleLike = async () => {
@@ -275,7 +283,7 @@ const BookDetailPage = () => {
             <button
               type="button"
               onClick={() => void toggleLike()}
-              disabled={likeLoading}
+              disabled={likeLoading || (isLoggedIn() && !likeStatus)}
               aria-pressed={likeStatus?.likedByMe ?? false}
               aria-label={likeStatus?.likedByMe ? "좋아요 취소" : "좋아요"}
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border font-bold transition-colors disabled:opacity-50 ${
