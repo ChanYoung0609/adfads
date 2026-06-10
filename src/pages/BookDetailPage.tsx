@@ -1,15 +1,19 @@
 ﻿import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, BookOpen, Users, Flag, X, Star, Pencil, Trash2, MessageCircle } from "lucide-react";
+import { Sparkles, BookOpen, Users, Flag, X, Star, Pencil, Trash2, MessageCircle, Heart } from "lucide-react";
 import {
+  addBookLike,
   createBookReview,
   deleteBookReview,
   fetchBookDetail,
+  fetchBookLikeStatus,
   fetchBookReviews,
+  removeBookLike,
   reportBook,
   updateBookReview,
   type BookDetail,
+  type BookLikeStatus,
   type BookReviewItem,
   type ReportReason,
   type ReviewPageResponse,
@@ -31,6 +35,10 @@ const BookDetailPage = () => {
   const [book, setBook] = useState<BookDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  const [likeStatus, setLikeStatus] = useState<BookLikeStatus | null>(null);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [likeErrorMessage, setLikeErrorMessage] = useState<string | null>(null);
 
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState<ReportReason>("SPAM");
@@ -59,6 +67,48 @@ const BookDetailPage = () => {
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    let active = true;
+    setLikeStatus(null);
+    fetchBookLikeStatus(id)
+      .then((status) => {
+        if (active) setLikeStatus(status);
+      })
+      .catch(() => {
+        if (active) setLikeStatus(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  const toggleLike = async () => {
+    if (!book?.bookId || likeLoading) return;
+
+    if (!isLoggedIn()) {
+      if (window.confirm("로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?")) {
+        navigate("/login");
+      }
+      return;
+    }
+
+    const liked = likeStatus?.likedByMe ?? false;
+
+    setLikeLoading(true);
+    setLikeErrorMessage(null);
+
+    try {
+      const status = liked ? await removeBookLike(book.bookId) : await addBookLike(book.bookId);
+      setLikeStatus(status);
+    } catch (err) {
+      setLikeErrorMessage(err instanceof Error ? err.message : "좋아요 처리에 실패했습니다.");
+      window.setTimeout(() => setLikeErrorMessage(null), 2500);
+    } finally {
+      setLikeLoading(false);
+    }
+  };
 
   const loadReviews = async (targetPage = 0, append = false) => {
     if (!id) return;
@@ -230,6 +280,22 @@ const BookDetailPage = () => {
       <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6">
         <div className="max-w-6xl mx-auto space-y-4">
           <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => void toggleLike()}
+              disabled={likeLoading || (isLoggedIn() && !likeStatus)}
+              aria-pressed={likeStatus?.likedByMe ?? false}
+              aria-label={likeStatus?.likedByMe ? "좋아요 취소" : "좋아요"}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border font-bold transition-colors disabled:opacity-50 ${
+                likeStatus?.likedByMe
+                  ? "border-red-300 bg-red-50 text-red-600 hover:bg-red-100"
+                  : "border-on-surface-variant/30 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container"
+              }`}
+            >
+              <Heart size={16} className={likeStatus?.likedByMe ? "fill-current" : ""} />
+              좋아요
+              {likeStatus && <span>{likeStatus.likeCount.toLocaleString()}</span>}
+            </button>
             <a
               href="#book-reviews"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-primary font-bold hover:bg-primary/15 transition-colors"
@@ -253,6 +319,12 @@ const BookDetailPage = () => {
           {reportDoneMessage && (
             <div className="rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary font-bold">
               {reportDoneMessage}
+            </div>
+          )}
+
+          {likeErrorMessage && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 font-bold">
+              {likeErrorMessage}
             </div>
           )}
 
