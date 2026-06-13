@@ -560,6 +560,25 @@ export async function removeBookLike(bookId: string): Promise<BookLikeStatus> {
   return handleBookLikeAction(bookId, "DELETE", "좋아요 취소에 실패했습니다.");
 }
 
+// ── 작가 프로필 ──
+
+export interface AuthorProfile {
+  nickname: string;
+  joinedAt: string;
+  bio: string;
+}
+
+const authorProfileSchema: z.ZodType<AuthorProfile> = z.object({
+  nickname: z.string(),
+  joinedAt: z.string(),
+  bio: z.string(),
+});
+
+export async function fetchAuthorProfile(userId: string): Promise<AuthorProfile> {
+  const res = await fetchWithAuth(`/api/user/${userId}/profile`, { method: "GET" });
+  return parseApiResponse(res, authorProfileSchema, "작가 정보 조회에 실패했습니다.");
+}
+
 // ── 작가 팔로우 ──
 
 export interface AuthorFollowStatus {

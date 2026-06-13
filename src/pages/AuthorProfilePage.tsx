@@ -3,7 +3,19 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowLeft, BookOpen, Heart, PenTool, Sparkles, Star, UserCheck, UserPlus } from "lucide-react";
 import { isLoggedIn } from "../lib/auth";
-import { fetchAuthorFollowStatus, followAuthor, unfollowAuthor } from "../lib/api";
+import {
+  fetchAuthorFollowStatus,
+  fetchAuthorProfile,
+  followAuthor,
+  unfollowAuthor,
+  type AuthorProfile,
+} from "../lib/api";
+
+function formatJoinedAt(iso: string): string {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return `${parsed.getFullYear()}년 ${parsed.getMonth() + 1}월 가입`;
+}
 
 interface AuthorBookMock {
   bookId: string;
@@ -97,9 +109,24 @@ const AuthorProfilePage = () => {
     return { ...MOCK_AUTHORS.default, userId: id ?? "default" };
   }, [id]);
 
+  const [profile, setProfile] = useState<AuthorProfile | null>(null);
   const [following, setFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState<number | null>(null);
   const [followPending, setFollowPending] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setProfile(null);
+    fetchAuthorProfile(id)
+      .then((data) => {
+        if (!cancelled) setProfile(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -115,6 +142,10 @@ const AuthorProfilePage = () => {
       cancelled = true;
     };
   }, [id]);
+
+  const displayName = profile?.nickname || author.nickname;
+  const displayBio = profile?.bio?.trim() ? profile.bio : author.bio;
+  const displayJoinedAt = profile ? formatJoinedAt(profile.joinedAt) : author.joinedAt;
 
   const handleToggleFollow = async () => {
     if (!id || followPending) return;
@@ -168,7 +199,7 @@ const AuthorProfilePage = () => {
             <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white shadow-xl flex-shrink-0">
               <img
                 src={author.profileImage}
-                alt={`${author.nickname} 프로필`}
+                alt={`${displayName} 프로필`}
                 className="w-full h-full object-cover"
                 loading="eager"
                 decoding="async"
@@ -180,9 +211,9 @@ const AuthorProfilePage = () => {
                 <Sparkles size={14} />
                 AUTHOR
               </div>
-              <h1 className="text-3xl md:text-5xl font-headline font-extrabold text-on-surface break-keep">{author.nickname}</h1>
-              <p className="text-xs md:text-sm text-on-surface-variant">{author.joinedAt}</p>
-              <p className="text-sm md:text-base text-on-surface-variant leading-relaxed whitespace-pre-wrap">{author.bio}</p>
+              <h1 className="text-3xl md:text-5xl font-headline font-extrabold text-on-surface break-keep">{displayName}</h1>
+              <p className="text-xs md:text-sm text-on-surface-variant">{displayJoinedAt}</p>
+              <p className="text-sm md:text-base text-on-surface-variant leading-relaxed whitespace-pre-wrap">{displayBio}</p>
             </div>
 
             <div className="flex flex-row md:flex-col gap-3 w-full md:w-auto">
@@ -236,7 +267,7 @@ const AuthorProfilePage = () => {
                 <BookOpen size={22} className="text-primary" />
                 작품 목록
               </h2>
-              <p className="text-sm text-on-surface-variant mt-1">{author.nickname} 작가의 작품 {author.books.length}권</p>
+              <p className="text-sm text-on-surface-variant mt-1">{displayName} 작가의 작품 {author.books.length}권</p>
             </div>
           </div>
 
