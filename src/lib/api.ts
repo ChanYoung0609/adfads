@@ -140,6 +140,36 @@ export async function fetchBooks(page: number, size: number): Promise<PageRespon
   return parseApiResponse(res, pageResponseSchema(bookItemSchema), "Failed to fetch books");
 }
 
+export interface BestsellerItem {
+  bookId: string;
+  title: string;
+  coverImageUrl: string;
+  authorName: string;
+  price: number;
+  purchaseCount: number;
+  totalRevenue: number;
+  rank: number;
+  liked: boolean;
+}
+
+const bestsellerItemSchema: z.ZodType<BestsellerItem> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  coverImageUrl: z.string(),
+  authorName: z.string(),
+  price: z.number(),
+  purchaseCount: z.number(),
+  totalRevenue: z.number(),
+  rank: z.number(),
+  liked: z.boolean(),
+});
+
+// 인증 선택: 비로그인 시 liked는 false로 내려온다.
+export async function fetchBestsellers(page = 0, size = 10): Promise<CursorPageResponse<BestsellerItem>> {
+  const res = await fetchWithAuth(`/api/books/bestsellers?page=${page}&size=${size}`, { method: "GET" });
+  return parseApiResponse(res, cursorPageResponseSchema(bestsellerItemSchema), "베스트셀러 목록 조회에 실패했습니다.");
+}
+
 export async function fetchBanners(page = 0, size = 10): Promise<CursorPageResponse<BannerItem>> {
   const params = new URLSearchParams();
   params.set("page", String(page));

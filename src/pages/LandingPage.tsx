@@ -2,7 +2,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { Sparkles, Flame, Clock3, ChevronLeft, ChevronRight } from "lucide-react";
-import { fetchBanners, fetchBooks, fetchCategories, type BannerItem, type BookItem, type CategoryItem } from "../lib/api";
+import { fetchBanners, fetchBestsellers, fetchBooks, fetchCategories, type BannerItem, type BestsellerItem, type BookItem, type CategoryItem } from "../lib/api";
 import { isLoggedIn, fetchUserMe, removeAccessToken, clearUserCache } from "../lib/auth";
 
 const HERO_ILLUSTRATION = {
@@ -154,6 +154,7 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false, more
 
 const LandingPage = () => {
   const [books, setBooks] = useState<BookItem[]>([]);
+  const [bestsellers, setBestsellers] = useState<BestsellerItem[]>([]);
   const [banners, setBanners] = useState<BannerItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | "all">("all");
@@ -163,6 +164,12 @@ const LandingPage = () => {
   useEffect(() => {
     fetchBooks(0, 20)
       .then((data) => setBooks(data.content))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetchBestsellers(0, 10)
+      .then((data) => setBestsellers(data.items))
       .catch(() => {});
   }, []);
 
@@ -183,7 +190,6 @@ const LandingPage = () => {
       .catch(() => {});
   }, []);
 
-  const bestBooks = useMemo(() => [...books].reverse().slice(0, 10), [books]);
   const latestBooks = useMemo(() => books.slice(0, 10), [books]);
   const currentBanner = banners[bannerIndex];
   const goToPrevBanner = () =>
@@ -415,7 +421,7 @@ const LandingPage = () => {
             </div>
           </motion.div>
 
-          {books.length > 0 && (
+          {(bestsellers.length > 0 || books.length > 0) && (
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
@@ -426,7 +432,7 @@ const LandingPage = () => {
                 <SliderSection
                   title="베스트셀러 TOP 10"
                   icon={<Flame size={18} />}
-                  books={bestBooks}
+                  books={bestsellers}
                   accentClass="text-secondary"
                   showRank
                   moreLink="/explore"
