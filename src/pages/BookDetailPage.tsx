@@ -401,18 +401,14 @@ const BookDetailPage = () => {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 md:gap-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div className="glass p-3 md:p-4 rounded-xl md:rounded-2xl text-center">
                   <p className="text-[10px] md:text-xs font-bold text-on-surface-variant uppercase mb-1">분량</p>
                   <p className="font-bold text-sm md:text-base">{book.pages.length} 페이지</p>
                 </div>
                 <div className="glass p-3 md:p-4 rounded-xl md:rounded-2xl text-center">
-                  <p className="text-[10px] md:text-xs font-bold text-on-surface-variant uppercase mb-1">등장인물</p>
-                  <p className="font-bold text-sm md:text-base">{book.characters.length}명</p>
-                </div>
-                <div className="glass p-3 md:p-4 rounded-xl md:rounded-2xl text-center">
-                  <p className="text-[10px] md:text-xs font-bold text-on-surface-variant uppercase mb-1">형식</p>
-                  <p className="font-bold text-sm md:text-base">세로형</p>
+                  <p className="text-[10px] md:text-xs font-bold text-on-surface-variant uppercase mb-1">카테고리</p>
+                  <p className="font-bold text-sm md:text-base">{book.categoryName ?? "-"}</p>
                 </div>
               </div>
 
