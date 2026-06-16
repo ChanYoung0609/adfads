@@ -102,18 +102,22 @@ const AuthorDashboardPage = () => {
           </motion.div>
 
           <div className="grid grid-cols-2 gap-4">
-            {[
-              { label: "출판 작품", value: summary?.publishedBookCount ?? 0, icon: BookOpen },
-              { label: "작성 중", value: summary?.inProgressBookCount ?? 0, icon: PenTool },
+            {([
+              { label: "출판 작품", value: summary?.publishedBookCount ?? 0, icon: BookOpen, to: "/library?tab=completed" },
+              { label: "작성 중", value: summary?.inProgressBookCount ?? 0, icon: PenTool, to: "/library?tab=working" },
               { label: "총 조회수", value: (summary?.totalViewCount ?? 0).toLocaleString(), icon: Eye },
               { label: "평균 평점", value: summary?.averageBookRating ?? 0, icon: Star },
-            ].map((stat, i) => (
+            ] as Array<{ label: string; value: string | number; icon: typeof BookOpen; to?: string }>).map((stat, i) => (
               <motion.div
                 key={stat.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + i * 0.05 }}
-                className="bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/20"
+                onClick={stat.to ? () => navigate(stat.to as string) : undefined}
+                role={stat.to ? "button" : undefined}
+                className={`bg-surface-container-lowest rounded-2xl p-4 border border-outline-variant/20 ${
+                  stat.to ? "cursor-pointer hover:border-primary/40 hover:bg-surface-container transition-colors" : ""
+                }`}
               >
                 <stat.icon size={18} className="text-primary mb-2" />
                 <p className="text-xl font-headline font-bold text-on-surface">{stat.value}</p>
@@ -162,7 +166,9 @@ const AuthorDashboardPage = () => {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 p-4 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors items-center"
+                  onClick={() => navigate(`/book/${book.bookId}`)}
+                  role="button"
+                  className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 p-4 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors items-center cursor-pointer"
                 >
                   <div className="md:col-span-4 flex items-center gap-3">
                     <span className="text-sm font-bold text-on-surface-variant w-6">{i + 1}</span>
