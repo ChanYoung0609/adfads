@@ -672,14 +672,14 @@ export interface AuthorProfile {
   nickname: string;
   profileImage: string | null;
   joinedAt: string;
-  bio: string;
+  bio: string | null;
 }
 
 const authorProfileSchema: z.ZodType<AuthorProfile> = z.object({
   nickname: z.string(),
   profileImage: z.string().nullable(),
   joinedAt: z.string(),
-  bio: z.string(),
+  bio: z.string().nullable(),
 });
 
 export async function fetchAuthorProfile(userId: string): Promise<AuthorProfile> {

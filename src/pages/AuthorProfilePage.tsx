@@ -179,6 +179,7 @@ const AuthorProfilePage = () => {
                 className="w-full h-full object-cover"
                 loading="eager"
                 decoding="async"
+                referrerPolicy="no-referrer"
               />
             </div>
 
