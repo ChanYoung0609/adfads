@@ -286,6 +286,7 @@ export interface BookDetail {
   bookId: string;
   title: string;
   description: string;
+  authorId: string;
   authorName: string;
   coverImageUrl: string;
   pages: BookDetailPage[];
@@ -296,6 +297,7 @@ const bookDetailSchema: z.ZodType<BookDetail> = z.object({
   bookId: z.string(),
   title: z.string(),
   description: z.string(),
+  authorId: z.string(),
   authorName: z.string(),
   coverImageUrl: z.string(),
   pages: z.array(
