@@ -1,16 +1,19 @@
 ﻿import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, BookOpen, Users, Flag, X, Star, Pencil, Trash2, MessageCircle, Heart } from "lucide-react";
+import { Sparkles, BookOpen, Users, Flag, X, Star, Pencil, Trash2, MessageCircle, Heart, UserPlus, UserCheck } from "lucide-react";
 import {
   addBookLike,
   createBookReview,
   deleteBookReview,
+  fetchAuthorFollowStatus,
   fetchBookDetail,
   fetchBookLikeStatus,
   fetchBookReviews,
+  followAuthor,
   removeBookLike,
   reportBook,
+  unfollowAuthor,
   updateBookReview,
   type BookDetail,
   type BookLikeStatus,
@@ -39,6 +42,9 @@ const BookDetailPage = () => {
   const [likeStatus, setLikeStatus] = useState<BookLikeStatus | null>(null);
   const [likeLoading, setLikeLoading] = useState(false);
   const [likeErrorMessage, setLikeErrorMessage] = useState<string | null>(null);
+
+  const [following, setFollowing] = useState(false);
+  const [followPending, setFollowPending] = useState(false);
 
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState<ReportReason>("SPAM");
@@ -83,6 +89,45 @@ const BookDetailPage = () => {
       active = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    const authorId = book?.authorId;
+    if (!authorId) return;
+    let active = true;
+    setFollowing(false);
+    fetchAuthorFollowStatus(authorId)
+      .then((status) => {
+        if (active) setFollowing(status.followedByMe);
+      })
+      .catch(() => {
+        if (active) setFollowing(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [book?.authorId]);
+
+  const handleToggleFollow = async () => {
+    const authorId = book?.authorId;
+    if (!authorId || followPending) return;
+
+    if (!isLoggedIn()) {
+      if (window.confirm("로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?")) {
+        navigate("/login");
+      }
+      return;
+    }
+
+    setFollowPending(true);
+    try {
+      const status = following ? await unfollowAuthor(authorId) : await followAuthor(authorId);
+      setFollowing(status.followedByMe);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "요청에 실패했습니다.");
+    } finally {
+      setFollowPending(false);
+    }
+  };
 
   const toggleLike = async () => {
     if (!book?.bookId || likeLoading) return;
@@ -246,6 +291,28 @@ const BookDetailPage = () => {
     }
   };
 
+  const renderFollowButton = () => (
+    <div className="relative inline-flex group">
+      <button
+        type="button"
+        onClick={() => void handleToggleFollow()}
+        disabled={followPending}
+        className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full font-bold text-sm transition-colors disabled:opacity-60 ${
+          following
+            ? "border border-outline-variant/40 bg-white text-on-surface hover:bg-surface-container-low"
+            : "bg-primary text-on-primary hover:bg-secondary"
+        }`}
+      >
+        {following ? <UserCheck size={15} /> : <UserPlus size={15} />}
+        {following ? "팔로잉" : "팔로우"}
+      </button>
+      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden whitespace-nowrap rounded-xl bg-on-surface px-3 py-2 text-xs font-bold text-white shadow-lg group-hover:block">
+        작가의 다른 작품이 궁금하다면?
+        <span className="absolute left-1/2 top-full -translate-x-1/2 h-0 w-0 border-x-[6px] border-x-transparent border-t-[6px] border-t-on-surface" />
+      </div>
+    </div>
+  );
+
   const formatReviewDate = (date: string) => {
     const parsed = new Date(date);
     if (Number.isNaN(parsed.getTime())) return date;
@@ -353,11 +420,14 @@ const BookDetailPage = () => {
                     AI 그림책
                   </div>
                   <h2 className="text-3xl font-headline font-bold leading-tight mb-2">{book.title}</h2>
-                  <p className="text-on-surface-variant text-base font-medium mb-2">
-                    <Link to={`/author/${book.authorId}`} className="hover:text-primary transition-colors">
-                      {book.authorName} 작가
-                    </Link>
-                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <p className="text-on-surface-variant text-base font-medium">
+                      <Link to={`/author/${book.authorId}`} className="hover:text-primary transition-colors">
+                        {book.authorName} 작가
+                      </Link>
+                    </p>
+                    {renderFollowButton()}
+                  </div>
                   <div className="flex items-center gap-1.5 text-on-surface-variant">
                     <BookOpen size={16} />
                     <span className="text-sm font-medium">{book.pages.length} 페이지</span>
@@ -387,6 +457,7 @@ const BookDetailPage = () => {
                   <Link to={`/author/${book.authorId}`} className="font-bold hover:text-primary transition-colors">
                     {book.authorName} 작가
                   </Link>
+                  {renderFollowButton()}
                   <div className="h-4 w-[1px] bg-on-surface-variant/20" />
                   <div className="flex items-center gap-1.5 text-on-surface-variant">
                     <BookOpen size={18} />
