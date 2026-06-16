@@ -97,7 +97,7 @@ export interface BannerItem {
 }
 
 export type MyBookStatus = "DRAFT" | "IN_PROGRESS" | "COMPLETED";
-export type MyBookVisibility = "PRIVATE" | "PUBLIC";
+export type MyBookVisibility = "PRIVATE" | "PUBLIC" | "PAID";
 
 export interface MyBookItem {
   bookId: string;
@@ -131,7 +131,7 @@ const myBookItemSchema: z.ZodType<MyBookItem> = z.object({
   authorName: z.string(),
   coverImageUrl: z.string(),
   status: z.enum(["DRAFT", "IN_PROGRESS", "COMPLETED"]),
-  visibility: z.enum(["PRIVATE", "PUBLIC"]),
+  visibility: z.enum(["PRIVATE", "PUBLIC", "PAID"]),
   createdAt: z.string(),
 });
 
@@ -317,7 +317,7 @@ export interface AuthorSummary {
 export interface BookPerformanceItem {
   bookId: string;
   title: string;
-  visibility: "PRIVATE" | "PUBLIC";
+  visibility: "PRIVATE" | "PUBLIC" | "PAID";
   viewCount: number;
   likeCount: number;
   averageRating: number;
@@ -336,7 +336,7 @@ const authorSummarySchema: z.ZodType<AuthorSummary> = z.object({
 const bookPerformanceItemSchema: z.ZodType<BookPerformanceItem> = z.object({
   bookId: z.string(),
   title: z.string(),
-  visibility: z.enum(["PRIVATE", "PUBLIC"]),
+  visibility: z.enum(["PRIVATE", "PUBLIC", "PAID"]),
   viewCount: z.number(),
   likeCount: z.number(),
   averageRating: z.number(),
