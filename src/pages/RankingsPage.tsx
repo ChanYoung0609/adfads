@@ -113,7 +113,7 @@ const mapHighlightBooks = (items: BestsellerHighlightItem[]): BookRankItem[] =>
     author: item.authorName,
     likes: 0,
     sales: item.salesCount,
-    coverImageUrl: null,
+    coverImageUrl: item.coverImageUrl,
   }));
 
 type AuthorSectionProps = {
@@ -303,9 +303,7 @@ const RankingsPage = () => {
     weekly: emptyRankingData(),
     monthly: emptyRankingData(),
   });
-  const [highlights, setHighlights] = useState<{ monthly: BookRankItem[] }>({
-    monthly: [],
-  });
+  const [highlights, setHighlights] = useState<BookRankItem[]>([]);
   const [rankingError, setRankingError] = useState<string | null>(null);
   const isMonthly = period === "monthly";
 
@@ -353,18 +351,17 @@ const RankingsPage = () => {
 
   useEffect(() => {
     let cancelled = false;
-    fetchBestsellerHighlights()
+    const bestsellerPeriod = period === "weekly" ? "WEEKLY" : "MONTHLY";
+    fetchBestsellerHighlights(bestsellerPeriod)
       .then((data) => {
         if (cancelled) return;
-        setHighlights({
-          monthly: mapHighlightBooks(data.monthly),
-        });
+        setHighlights(mapHighlightBooks(data.items));
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [period]);
 
   const current = useMemo(() => rankingMap[period], [period, rankingMap]);
 
@@ -411,9 +408,9 @@ const RankingsPage = () => {
         </motion.section>
 
         <BookSection
-          title="이달의 베스트셀러"
+          title={`${periodLabel(period)} 베스트셀러`}
           icon={<Coins size={20} className="text-amber-600" />}
-          items={highlights.monthly}
+          items={highlights}
           metric="count"
         />
 
