@@ -238,6 +238,36 @@ export async function fetchMyBooks(
   return parseApiResponse(res, pageResponseSchema(myBookItemSchema), "내 책 목록 조회에 실패했습니다.");
 }
 
+// ── 좋아요한 책 ──
+
+export interface LikedBookItem {
+  bookId: string;
+  title: string;
+  coverImageUrl: string;
+  authorName: string;
+  likedAt: string;
+  liked: boolean;
+}
+
+const likedBookItemSchema: z.ZodType<LikedBookItem> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  coverImageUrl: z.string(),
+  authorName: z.string(),
+  likedAt: z.string(),
+  liked: z.boolean(),
+});
+
+// 인증 필수. 내가 좋아요한 책 목록을 최신순으로 반환한다.
+export async function fetchMyLikedBooks(page = 0, size = 10): Promise<CursorPageResponse<LikedBookItem>> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(size));
+
+  const res = await fetchWithAuth(`/api/books/me/likes?${params.toString()}`, { method: "GET" });
+  return parseApiResponse(res, cursorPageResponseSchema(likedBookItemSchema), "좋아요한 책 목록 조회에 실패했습니다.");
+}
+
 // ── 연도별 수익 ──
 
 export interface MonthlyRevenue {
