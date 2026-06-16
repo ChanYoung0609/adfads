@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Plus, Wand2, Image as ImageIcon } from "lucide-react";
-import { fetchMyBooks, type MyBookItem } from "../lib/api";
+import { fetchMyBooks, fetchMyLikedBooks, type LikedBookItem, type MyBookItem } from "../lib/api";
 import { isLoggedIn } from "../lib/auth";
 
 type LibraryTab = "working" | "completed" | "liked";
@@ -41,6 +41,12 @@ const LibraryPage = () => {
   const [hasMoreDraft, setHasMoreDraft] = useState(false);
   const [hasMoreInProgress, setHasMoreInProgress] = useState(false);
   const [hasMoreCompleted, setHasMoreCompleted] = useState(false);
+
+  const [likedBooks, setLikedBooks] = useState<LikedBookItem[]>([]);
+  const [likedPage, setLikedPage] = useState(0);
+  const [hasMoreLiked, setHasMoreLiked] = useState(false);
+  const [likedLoaded, setLikedLoaded] = useState(false);
+  const [likedLoading, setLikedLoading] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -83,6 +89,30 @@ const LibraryPage = () => {
     void loadInitial();
   }, [navigate]);
 
+  // 좋아요 한 책 탭은 처음 열릴 때 한 번만 로드한다.
+  useEffect(() => {
+    if (activeTab !== "liked" || likedLoaded) return;
+    let cancelled = false;
+    setLikedLoading(true);
+    fetchMyLikedBooks(0, PAGE_SIZE)
+      .then((res) => {
+        if (cancelled) return;
+        setLikedBooks(res.items);
+        setLikedPage(0);
+        setHasMoreLiked(res.hasNext);
+        setLikedLoaded(true);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : "좋아요 한 책을 불러오지 못했습니다.");
+      })
+      .finally(() => {
+        if (!cancelled) setLikedLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, likedLoaded]);
+
   const workingBooks = useMemo(() => [...draftBooks, ...inProgressBooks], [draftBooks, inProgressBooks]);
 
   const visibleBooks = useMemo(() => {
@@ -94,8 +124,8 @@ const LibraryPage = () => {
   const hasMore = useMemo(() => {
     if (activeTab === "working") return hasMoreDraft || hasMoreInProgress;
     if (activeTab === "completed") return hasMoreCompleted;
-    return false;
-  }, [activeTab, hasMoreDraft, hasMoreInProgress, hasMoreCompleted]);
+    return hasMoreLiked;
+  }, [activeTab, hasMoreDraft, hasMoreInProgress, hasMoreCompleted, hasMoreLiked]);
 
   const loadMore = async () => {
     if (loadingMore || !hasMore) return;
@@ -134,6 +164,12 @@ const LibraryPage = () => {
         setCompletedBooks((prev) => [...prev, ...(res.content ?? [])]);
         setCompletedPage(nextPage);
         setHasMoreCompleted(!res.last);
+      } else if (activeTab === "liked" && hasMoreLiked) {
+        const nextPage = likedPage + 1;
+        const res = await fetchMyLikedBooks(nextPage, PAGE_SIZE);
+        setLikedBooks((prev) => [...prev, ...res.items]);
+        setLikedPage(nextPage);
+        setHasMoreLiked(res.hasNext);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "목록을 더 불러오지 못했습니다.");
@@ -244,8 +280,31 @@ const LibraryPage = () => {
                 );
               })}
 
-              {activeTab === "liked" && (
-                <div className="col-span-full text-center py-16 text-[#6673a8]">좋아요 한 책 기능은 곧 연결될 예정이에요.</div>
+              {activeTab === "liked" &&
+                likedBooks.map((book) => (
+                  <Link key={book.bookId} to={`/book/${book.bookId}`} className="rounded-[32px] overflow-hidden bg-white shadow-sm hover:-translate-y-1 transition-transform">
+                    <div className="aspect-[4/3] bg-[#dde2f6]">
+                      {book.coverImageUrl ? (
+                        <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[#a6b0db]">
+                          <ImageIcon size={30} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-5 space-y-2">
+                      <h4 className="text-[30px] leading-tight font-bold text-[#1e2e66] truncate">{book.title}</h4>
+                      <p className="text-sm text-[#6673a8]">{book.authorName}</p>
+                    </div>
+                  </Link>
+                ))}
+
+              {activeTab === "liked" && likedLoading && likedBooks.length === 0 && (
+                <div className="col-span-full text-center py-16 text-[#6673a8]">좋아요 한 책을 불러오는 중...</div>
+              )}
+
+              {activeTab === "liked" && !likedLoading && likedBooks.length === 0 && (
+                <div className="col-span-full text-center py-16 text-[#6673a8]">아직 좋아요 한 책이 없어요.</div>
               )}
 
               {activeTab !== "liked" && visibleBooks.length === 0 && (
@@ -253,7 +312,7 @@ const LibraryPage = () => {
               )}
             </section>
 
-            {activeTab !== "liked" && hasMore && (
+            {hasMore && (
               <div className="pt-2">
                 <button
                   type="button"
