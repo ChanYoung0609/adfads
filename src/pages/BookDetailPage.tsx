@@ -1,16 +1,19 @@
 ﻿import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, BookOpen, Users, Flag, X, Star, Pencil, Trash2, MessageCircle, Heart } from "lucide-react";
+import { Sparkles, BookOpen, Users, Flag, X, Star, Pencil, Trash2, MessageCircle, Heart, UserPlus, UserCheck, FileDown } from "lucide-react";
 import {
   addBookLike,
   createBookReview,
   deleteBookReview,
+  fetchAuthorFollowStatus,
   fetchBookDetail,
   fetchBookLikeStatus,
   fetchBookReviews,
+  followAuthor,
   removeBookLike,
   reportBook,
+  unfollowAuthor,
   updateBookReview,
   type BookDetail,
   type BookLikeStatus,
@@ -29,6 +32,22 @@ const reportReasons: ReadonlyArray<{ label: string; value: ReportReason }> = [
 
 const REVIEW_PAGE_SIZE = 10;
 
+const escapeHtml = (value: string) =>
+  value.replace(/[&<>"']/g, (char) => {
+    switch (char) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&quot;";
+      default:
+        return "&#39;";
+    }
+  });
+
 const BookDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -39,6 +58,9 @@ const BookDetailPage = () => {
   const [likeStatus, setLikeStatus] = useState<BookLikeStatus | null>(null);
   const [likeLoading, setLikeLoading] = useState(false);
   const [likeErrorMessage, setLikeErrorMessage] = useState<string | null>(null);
+
+  const [following, setFollowing] = useState(false);
+  const [followPending, setFollowPending] = useState(false);
 
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState<ReportReason>("SPAM");
@@ -83,6 +105,45 @@ const BookDetailPage = () => {
       active = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    const authorId = book?.authorId;
+    if (!authorId) return;
+    let active = true;
+    setFollowing(false);
+    fetchAuthorFollowStatus(authorId)
+      .then((status) => {
+        if (active) setFollowing(status.followedByMe);
+      })
+      .catch(() => {
+        if (active) setFollowing(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [book?.authorId]);
+
+  const handleToggleFollow = async () => {
+    const authorId = book?.authorId;
+    if (!authorId || followPending) return;
+
+    if (!isLoggedIn()) {
+      if (window.confirm("로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?")) {
+        navigate("/login");
+      }
+      return;
+    }
+
+    setFollowPending(true);
+    try {
+      const status = following ? await unfollowAuthor(authorId) : await followAuthor(authorId);
+      setFollowing(status.followedByMe);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "요청에 실패했습니다.");
+    } finally {
+      setFollowPending(false);
+    }
+  };
 
   const toggleLike = async () => {
     if (!book?.bookId || likeLoading) return;
@@ -246,6 +307,113 @@ const BookDetailPage = () => {
     }
   };
 
+  const handleExportPdf = () => {
+    if (!book) return;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      alert("팝업이 차단되었습니다. 브라우저 팝업을 허용해주세요.");
+      return;
+    }
+
+    const pagesHtml = book.pages
+      .map(
+        (page) => `
+          <section class="page">
+            ${page.imageUrl ? `<img class="page-img" src="${page.imageUrl}" alt="" />` : ""}
+            <div class="page-no">${page.pageNumber} 페이지</div>
+            <p class="page-text">${escapeHtml(page.content)}</p>
+          </section>`
+      )
+      .join("");
+
+    const charactersHtml = book.characters.length
+      ? `<section class="block">
+          <h2>등장인물</h2>
+          ${book.characters
+            .map(
+              (character) =>
+                `<div class="character"><strong>${escapeHtml(character.name)}</strong><span>${escapeHtml(
+                  character.description
+                )}</span></div>`
+            )
+            .join("")}
+        </section>`
+      : "";
+
+    const html = `<!DOCTYPE html>
+      <html lang="ko">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="referrer" content="no-referrer" />
+          <title>${escapeHtml(book.title)}</title>
+          <style>
+            * { box-sizing: border-box; }
+            body { font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif; color: #1c1b1f; margin: 0; padding: 40px; }
+            .cover { text-align: center; page-break-after: always; }
+            .cover img { width: 320px; max-width: 70%; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+            .cover h1 { font-size: 32px; margin: 28px 0 8px; }
+            .cover .author { color: #555; font-size: 16px; }
+            .block { margin: 32px 0; }
+            .block h2 { font-size: 22px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+            .desc { line-height: 1.7; font-size: 15px; white-space: pre-wrap; }
+            .character { margin: 12px 0; }
+            .character strong { display: block; font-size: 16px; }
+            .character span { color: #555; font-size: 14px; }
+            .page { page-break-inside: avoid; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+            .page-img { width: 100%; max-width: 520px; border-radius: 12px; display: block; margin: 0 auto 12px; }
+            .page-no { color: #6750a4; font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+            .page-text { line-height: 1.8; font-size: 15px; white-space: pre-wrap; margin: 0; }
+            @media print { body { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="cover">
+            <img src="${book.coverImageUrl}" alt="" />
+            <h1>${escapeHtml(book.title)}</h1>
+            <div class="author">${escapeHtml(book.authorName)} 작가</div>
+          </div>
+          <section class="block">
+            <h2>이야기 소개</h2>
+            <p class="desc">${escapeHtml(book.description)}</p>
+          </section>
+          ${charactersHtml}
+          ${pagesHtml ? `<section class="block"><h2>미리보기</h2>${pagesHtml}</section>` : ""}
+          <script>
+            window.addEventListener("load", function () {
+              setTimeout(function () { window.focus(); window.print(); }, 400);
+            });
+          </script>
+        </body>
+      </html>`;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
+  const renderFollowButton = () => (
+    <div className="relative inline-flex group">
+      <button
+        type="button"
+        onClick={() => void handleToggleFollow()}
+        disabled={followPending}
+        className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full font-bold text-sm transition-colors disabled:opacity-60 ${
+          following
+            ? "border border-outline-variant/40 bg-white text-on-surface hover:bg-surface-container-low"
+            : "bg-primary text-on-primary hover:bg-secondary"
+        }`}
+      >
+        {following ? <UserCheck size={15} /> : <UserPlus size={15} />}
+        {following ? "팔로잉" : "팔로우"}
+      </button>
+      <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden whitespace-nowrap rounded-xl bg-on-surface px-3 py-2 text-xs font-bold text-white shadow-lg group-hover:block">
+        작가의 다른 작품이 궁금하다면?
+        <span className="absolute left-1/2 top-full -translate-x-1/2 h-0 w-0 border-x-[6px] border-x-transparent border-t-[6px] border-t-on-surface" />
+      </div>
+    </div>
+  );
+
   const formatReviewDate = (date: string) => {
     const parsed = new Date(date);
     if (Number.isNaN(parsed.getTime())) return date;
@@ -353,11 +521,14 @@ const BookDetailPage = () => {
                     AI 그림책
                   </div>
                   <h2 className="text-3xl font-headline font-bold leading-tight mb-2">{book.title}</h2>
-                  <p className="text-on-surface-variant text-base font-medium mb-2">
-                    <Link to={`/author/${book.authorId}`} className="hover:text-primary transition-colors">
-                      {book.authorName} 작가
-                    </Link>
-                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <p className="text-on-surface-variant text-base font-medium">
+                      <Link to={`/author/${book.authorId}`} className="hover:text-primary transition-colors">
+                        {book.authorName} 작가
+                      </Link>
+                    </p>
+                    {renderFollowButton()}
+                  </div>
                   <div className="flex items-center gap-1.5 text-on-surface-variant">
                     <BookOpen size={16} />
                     <span className="text-sm font-medium">{book.pages.length} 페이지</span>
@@ -387,6 +558,7 @@ const BookDetailPage = () => {
                   <Link to={`/author/${book.authorId}`} className="font-bold hover:text-primary transition-colors">
                     {book.authorName} 작가
                   </Link>
+                  {renderFollowButton()}
                   <div className="h-4 w-[1px] bg-on-surface-variant/20" />
                   <div className="flex items-center gap-1.5 text-on-surface-variant">
                     <BookOpen size={18} />
@@ -621,6 +793,15 @@ const BookDetailPage = () => {
           </div>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={handleExportPdf}
+        className="fixed bottom-6 right-6 z-[80] inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-on-primary font-bold shadow-xl hover:bg-secondary transition-colors active:scale-95"
+      >
+        <FileDown size={18} />
+        PDF로 추출하기
+      </button>
 
       {isReportOpen && (
         <div className="fixed inset-0 z-[90] bg-black/55 px-4 flex items-center justify-center" onClick={() => !reportSubmitting && setIsReportOpen(false)}>

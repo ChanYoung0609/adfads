@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Plus, Wand2, Image as ImageIcon } from "lucide-react";
 import { fetchMyBooks, fetchMyLikedBooks, type LikedBookItem, type MyBookItem } from "../lib/api";
 import { isLoggedIn } from "../lib/auth";
@@ -28,7 +28,12 @@ const progressByStatus: Record<MyBookItem["status"], number> = {
 
 const LibraryPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<LibraryTab>("working");
+  const [searchParams] = useSearchParams();
+  const initialTab: LibraryTab =
+    searchParams.get("tab") === "completed" || searchParams.get("tab") === "liked"
+      ? (searchParams.get("tab") as LibraryTab)
+      : "working";
+  const [activeTab, setActiveTab] = useState<LibraryTab>(initialTab);
 
   const [draftBooks, setDraftBooks] = useState<MyBookItem[]>([]);
   const [inProgressBooks, setInProgressBooks] = useState<MyBookItem[]>([]);
