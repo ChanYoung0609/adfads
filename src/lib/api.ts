@@ -609,6 +609,28 @@ export async function unfollowAuthor(authorId: string): Promise<AuthorFollowStat
   return parseApiResponse(res, authorFollowStatusSchema, "팔로우 취소에 실패했습니다.");
 }
 
+// ── 작가 통계 ──
+
+export interface AuthorStats {
+  bookCount: number;
+  totalLikeCount: number;
+  averageRating: number;
+  followerCount: number;
+}
+
+const authorStatsSchema: z.ZodType<AuthorStats> = z.object({
+  bookCount: z.number(),
+  totalLikeCount: z.number(),
+  averageRating: z.number(),
+  followerCount: z.number(),
+});
+
+// 인증 불필요(공개).
+export async function fetchAuthorStats(authorId: string): Promise<AuthorStats> {
+  const res = await fetchWithAuth(`/api/authors/${authorId}/stats`, { method: "GET" });
+  return parseApiResponse(res, authorStatsSchema, "작가 통계 조회에 실패했습니다.");
+}
+
 export async function fetchReadingProgress(bookId: string): Promise<ReadingProgress> {
   const res = await fetchWithAuth(`/api/books/${bookId}/reading-progress`, { method: "GET" });
   return parseApiResponse(res, readingProgressSchema, "내 진행도 조회에 실패했습니다.");

@@ -6,9 +6,11 @@ import { isLoggedIn } from "../lib/auth";
 import {
   fetchAuthorFollowStatus,
   fetchAuthorProfile,
+  fetchAuthorStats,
   followAuthor,
   unfollowAuthor,
   type AuthorProfile,
+  type AuthorStats,
 } from "../lib/api";
 
 function formatJoinedAt(iso: string): string {
@@ -110,6 +112,7 @@ const AuthorProfilePage = () => {
   }, [id]);
 
   const [profile, setProfile] = useState<AuthorProfile | null>(null);
+  const [stats, setStats] = useState<AuthorStats | null>(null);
   const [following, setFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState<number | null>(null);
   const [followPending, setFollowPending] = useState(false);
@@ -121,6 +124,20 @@ const AuthorProfilePage = () => {
     fetchAuthorProfile(id)
       .then((data) => {
         if (!cancelled) setProfile(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setStats(null);
+    fetchAuthorStats(id)
+      .then((data) => {
+        if (!cancelled) setStats(data);
       })
       .catch(() => {});
     return () => {
@@ -165,12 +182,24 @@ const AuthorProfilePage = () => {
     }
   };
 
-  const displayedFollowers = followerCount ?? author.stats.followers;
+  const displayedFollowers = followerCount ?? stats?.followerCount ?? author.stats.followers;
 
   const statCards = [
-    { label: "작품 수", value: author.stats.bookCount.toLocaleString(), icon: BookOpen },
-    { label: "총 좋아요", value: author.stats.totalLikes.toLocaleString(), icon: Heart },
-    { label: "평균 평점", value: author.stats.averageRating.toFixed(1), icon: Star },
+    {
+      label: "작품 수",
+      value: (stats?.bookCount ?? author.stats.bookCount).toLocaleString(),
+      icon: BookOpen,
+    },
+    {
+      label: "총 좋아요",
+      value: (stats?.totalLikeCount ?? author.stats.totalLikes).toLocaleString(),
+      icon: Heart,
+    },
+    {
+      label: "평균 평점",
+      value: (stats?.averageRating ?? author.stats.averageRating).toFixed(1),
+      icon: Star,
+    },
     { label: "팔로워", value: displayedFollowers.toLocaleString(), icon: UserPlus },
   ];
 
