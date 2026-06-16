@@ -225,6 +225,40 @@ export async function fetchMyRevenue(year?: number): Promise<YearlyRevenue> {
   return parseApiResponse(res, yearlyRevenueSchema, "수익 조회에 실패했습니다.");
 }
 
+// ── 작품별 월 판매 건수 추이 ──
+
+export interface MonthlySales {
+  month: number;
+  salesCount: number;
+}
+
+export interface BookMonthlySales {
+  bookId: string;
+  year: number;
+  monthlySales: MonthlySales[];
+}
+
+const monthlySalesSchema: z.ZodType<MonthlySales> = z.object({
+  month: z.number(),
+  salesCount: z.number(),
+});
+
+const bookMonthlySalesSchema: z.ZodType<BookMonthlySales> = z.object({
+  bookId: z.string(),
+  year: z.number(),
+  monthlySales: z.array(monthlySalesSchema),
+});
+
+// 인증 필요: 로그인한 작가 본인의 작품만 조회 가능.
+export async function fetchBookMonthlySales(bookId: string, year?: number): Promise<BookMonthlySales> {
+  const params = new URLSearchParams();
+  if (year != null) params.set("year", String(year));
+  const query = params.toString();
+
+  const res = await fetchWithAuth(`/api/books/${bookId}/sales/monthly${query ? `?${query}` : ""}`, { method: "GET" });
+  return parseApiResponse(res, bookMonthlySalesSchema, "작품별 월 판매 추이 조회에 실패했습니다.");
+}
+
 // ── 작가 대시보드: 요약 / 작품별 성과 ──
 
 export interface AuthorSummary {
