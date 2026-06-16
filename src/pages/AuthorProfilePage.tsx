@@ -148,6 +148,8 @@ const AuthorProfilePage = () => {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
+    setFollowing(false);
+    setFollowerCount(null);
     fetchAuthorFollowStatus(id)
       .then((status) => {
         if (cancelled) return;
