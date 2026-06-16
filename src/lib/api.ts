@@ -670,12 +670,14 @@ export async function removeBookLike(bookId: string): Promise<BookLikeStatus> {
 
 export interface AuthorProfile {
   nickname: string;
+  profileImage: string | null;
   joinedAt: string;
   bio: string;
 }
 
 const authorProfileSchema: z.ZodType<AuthorProfile> = z.object({
   nickname: z.string(),
+  profileImage: z.string().nullable(),
   joinedAt: z.string(),
   bio: z.string(),
 });
@@ -689,18 +691,12 @@ export async function fetchAuthorProfile(userId: string): Promise<AuthorProfile>
 
 export interface AuthorFollowStatus {
   authorId: string;
-  authorName: string;
-  authorProfileImage: string | null;
-  authorBio: string | null;
   followerCount: number;
   followedByMe: boolean;
 }
 
 const authorFollowStatusSchema: z.ZodType<AuthorFollowStatus> = z.object({
   authorId: z.string(),
-  authorName: z.string(),
-  authorProfileImage: z.string().nullable(),
-  authorBio: z.string().nullable(),
   followerCount: z.number(),
   followedByMe: z.boolean(),
 });
