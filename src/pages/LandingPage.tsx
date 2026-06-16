@@ -162,16 +162,34 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchBooks(0, 20)
-      .then((data) => setBooks(data.content))
-      .catch(() => {});
-  }, []);
+    const categoryId = selectedCategory === "all" ? undefined : selectedCategory;
+    let cancelled = false;
+    fetchBooks(0, 20, categoryId)
+      .then((data) => {
+        if (!cancelled) setBooks(data.content);
+      })
+      .catch(() => {
+        if (!cancelled) setBooks([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCategory]);
 
   useEffect(() => {
-    fetchBestsellers(0, 10)
-      .then((data) => setBestsellers(data.items))
-      .catch(() => {});
-  }, []);
+    const categoryId = selectedCategory === "all" ? undefined : selectedCategory;
+    let cancelled = false;
+    fetchBestsellers(0, 10, categoryId)
+      .then((data) => {
+        if (!cancelled) setBestsellers(data.items);
+      })
+      .catch(() => {
+        if (!cancelled) setBestsellers([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCategory]);
 
   useEffect(() => {
     fetchCategories()
@@ -403,7 +421,6 @@ const LandingPage = () => {
             className="w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           >
             <div className="flex gap-2 md:gap-3 justify-start md:justify-center px-2 min-w-max md:min-w-0">
-              //TODO 도서 목록을 필터링하거나 API를 호출
               {[{ id: "all" as const, name: "전체" }, ...categories].map((cat) => (
                 <button
                   key={cat.id}

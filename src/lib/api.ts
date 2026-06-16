@@ -135,8 +135,13 @@ const myBookItemSchema: z.ZodType<MyBookItem> = z.object({
   createdAt: z.string(),
 });
 
-export async function fetchBooks(page: number, size: number): Promise<PageResponse<BookItem>> {
-  const res = await fetchWithAuth(`/api/books?page=${page}&size=${size}`, { method: "GET" });
+export async function fetchBooks(page: number, size: number, categoryId?: number): Promise<PageResponse<BookItem>> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(size));
+  if (categoryId != null) params.set("categoryId", String(categoryId));
+
+  const res = await fetchWithAuth(`/api/books?${params.toString()}`, { method: "GET" });
   return parseApiResponse(res, pageResponseSchema(bookItemSchema), "Failed to fetch books");
 }
 
@@ -164,9 +169,14 @@ const bestsellerItemSchema: z.ZodType<BestsellerItem> = z.object({
   liked: z.boolean(),
 });
 
-// 인증 선택: 비로그인 시 liked는 false로 내려온다.
-export async function fetchBestsellers(page = 0, size = 10): Promise<CursorPageResponse<BestsellerItem>> {
-  const res = await fetchWithAuth(`/api/books/bestsellers?page=${page}&size=${size}`, { method: "GET" });
+// 인증 선택: 비로그인 시 liked는 false로 내려온다. categoryId 생략 시 전체 베스트셀러.
+export async function fetchBestsellers(page = 0, size = 10, categoryId?: number): Promise<CursorPageResponse<BestsellerItem>> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(size));
+  if (categoryId != null) params.set("categoryId", String(categoryId));
+
+  const res = await fetchWithAuth(`/api/books/bestsellers?${params.toString()}`, { method: "GET" });
   return parseApiResponse(res, cursorPageResponseSchema(bestsellerItemSchema), "베스트셀러 목록 조회에 실패했습니다.");
 }
 

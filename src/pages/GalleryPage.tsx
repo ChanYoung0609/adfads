@@ -29,6 +29,7 @@ const GalleryPage = () => {
   const loadingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const loadedPagesRef = useRef<Set<number>>(new Set());
+  const categoryRef = useRef<number | "all">("all");
   const likeErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadMore = useCallback(async () => {
@@ -36,11 +37,14 @@ const GalleryPage = () => {
     if (loadingRef.current || !hasMoreRef.current) return;
     if (loadedPagesRef.current.has(targetPage)) return;
 
+    const requestCategory = categoryRef.current;
     loadingRef.current = true;
     setLoading(true);
     try {
       loadedPagesRef.current.add(targetPage);
-      const data = await fetchBooks(targetPage, PAGE_SIZE);
+      const categoryId = requestCategory === "all" ? undefined : requestCategory;
+      const data = await fetchBooks(targetPage, PAGE_SIZE, categoryId);
+      if (categoryRef.current !== requestCategory) return; // 카테고리 변경됨 → 결과 폐기
 
       setBooks((prev) => {
         const map = new Map(prev.map((b) => [b.bookId, b]));
@@ -55,17 +59,29 @@ const GalleryPage = () => {
         pageRef.current = targetPage + 1;
       }
     } catch {
-      hasMoreRef.current = false;
-      setHasMore(false);
+      if (categoryRef.current === requestCategory) {
+        hasMoreRef.current = false;
+        setHasMore(false);
+      }
     } finally {
-      loadingRef.current = false;
-      setLoading(false);
+      if (categoryRef.current === requestCategory) {
+        loadingRef.current = false;
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
+    categoryRef.current = selectedCategory;
+    pageRef.current = 0;
+    loadedPagesRef.current = new Set();
+    hasMoreRef.current = true;
+    loadingRef.current = false;
+    animatedIdsRef.current = new Set();
+    setBooks([]);
+    setHasMore(true);
     loadMore();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedCategory, loadMore]);
 
   useEffect(() => {
     fetchCategories()
