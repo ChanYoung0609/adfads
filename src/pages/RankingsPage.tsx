@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import { BookOpen, Coins, Heart, Trophy } from "lucide-react";
 import { motion } from "motion/react";
 import {
+  fetchBestsellerHighlights,
   fetchMonthlyPopularAuthors,
   fetchMonthlyPopularBooks,
   fetchMonthlyProlificAuthors,
   fetchWeeklyPopularAuthors,
   fetchWeeklyPopularBooks,
   fetchWeeklyProlificAuthors,
+  type BestsellerHighlightItem,
   type MonthlyPopularAuthorItem,
   type MonthlyPopularBookItem,
   type MonthlyProlificAuthorItem,
@@ -40,7 +42,6 @@ type RankingViewData = {
   prolificAuthors: AuthorRankItem[];
   likedAuthors: AuthorRankItem[];
   likedBooks: BookRankItem[];
-  salesBooks: BookRankItem[];
 };
 
 const rankBadge = ["🥇", "🥈", "🥉"];
@@ -48,66 +49,10 @@ const podiumOrder = [1, 0, 2] as const;
 const fallbackProfileImage = "https://ssl.pstatic.net/static/pwe/address/img_profile.png";
 const fallbackCoverImage = "https://picsum.photos/seed/ranking-book-fallback/600/800";
 
-const temporarySalesBooks: Record<RankingPeriod, BookRankItem[]> = {
-  weekly: [
-    {
-      id: "weekly-sales-1",
-      title: "구름 위의 우체국",
-      author: "민들레",
-      likes: 178,
-      sales: 42000,
-      coverImageUrl: "https://picsum.photos/seed/week-sales-book-1/600/800",
-    },
-    {
-      id: "weekly-sales-2",
-      title: "수요일 별나라 여행",
-      author: "별모아",
-      likes: 161,
-      sales: 36800,
-      coverImageUrl: "https://picsum.photos/seed/week-sales-book-2/600/800",
-    },
-    {
-      id: "weekly-sales-3",
-      title: "바람꽃 도서관",
-      author: "몽두나무",
-      likes: 137,
-      sales: 31500,
-      coverImageUrl: "https://picsum.photos/seed/week-sales-book-3/600/800",
-    },
-  ],
-  monthly: [
-    {
-      id: "monthly-sales-1",
-      title: "별빛 요정의 모험",
-      author: "하늘봄",
-      likes: 512,
-      sales: 128000,
-      coverImageUrl: "https://picsum.photos/seed/month-sales-book-1/600/800",
-    },
-    {
-      id: "monthly-sales-2",
-      title: "숲속 친구들",
-      author: "초록나무",
-      likes: 436,
-      sales: 98000,
-      coverImageUrl: "https://picsum.photos/seed/month-sales-book-2/600/800",
-    },
-    {
-      id: "monthly-sales-3",
-      title: "무지개 다리",
-      author: "별비",
-      likes: 374,
-      sales: 90500,
-      coverImageUrl: "https://picsum.photos/seed/month-sales-book-3/600/800",
-    },
-  ],
-};
-
-const emptyRankingData = (period: RankingPeriod): RankingViewData => ({
+const emptyRankingData = (): RankingViewData => ({
   prolificAuthors: [],
   likedAuthors: [],
   likedBooks: [],
-  salesBooks: temporarySalesBooks[period],
 });
 
 const podiumHeightClass: Record<1 | 2 | 3, string> = {
@@ -159,6 +104,16 @@ const mapPopularBooks = (items: Array<WeeklyPopularBookItem | MonthlyPopularBook
     likes: item.likeCount,
     sales: 0,
     coverImageUrl: item.coverImageUrl,
+  }));
+
+const mapHighlightBooks = (items: BestsellerHighlightItem[]): BookRankItem[] =>
+  items.slice(0, 3).map((item) => ({
+    id: item.bookId,
+    title: item.title,
+    author: item.authorName,
+    likes: 0,
+    sales: item.salesCount,
+    coverImageUrl: null,
   }));
 
 type AuthorSectionProps = {
@@ -253,7 +208,13 @@ type BookSectionProps = {
   title: string;
   icon: React.ReactNode;
   items: BookRankItem[];
-  metric: "likes" | "sales";
+  metric: "likes" | "sales" | "count";
+};
+
+const bookMetricLabel = (item: BookRankItem, metric: BookSectionProps["metric"]): string => {
+  if (metric === "likes") return `좋아요 ${item.likes.toLocaleString()}개`;
+  if (metric === "count") return `판매 ${item.sales.toLocaleString()}건`;
+  return `매출 ${item.sales.toLocaleString()}원`;
 };
 
 const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
@@ -327,9 +288,7 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
                 {rankBadge[i]} {item.title}
               </p>
               <p className="text-xs text-on-surface-variant">{item.author} 작가</p>
-              <p className="text-xs text-on-surface-variant mt-0.5">
-                {metric === "likes" ? `좋아요 ${item.likes.toLocaleString()}개` : `매출 ${item.sales.toLocaleString()}원`}
-              </p>
+              <p className="text-xs text-on-surface-variant mt-0.5">{bookMetricLabel(item, metric)}</p>
             </div>
           </Link>
         ))}
@@ -341,8 +300,12 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
 const RankingsPage = () => {
   const [period, setPeriod] = useState<RankingPeriod>("monthly");
   const [rankingMap, setRankingMap] = useState<Record<RankingPeriod, RankingViewData>>({
-    weekly: emptyRankingData("weekly"),
-    monthly: emptyRankingData("monthly"),
+    weekly: emptyRankingData(),
+    monthly: emptyRankingData(),
+  });
+  const [highlights, setHighlights] = useState<{ monthly: BookRankItem[]; yearly: BookRankItem[] }>({
+    monthly: [],
+    yearly: [],
   });
   const [rankingError, setRankingError] = useState<string | null>(null);
   const isMonthly = period === "monthly";
@@ -369,13 +332,11 @@ const RankingsPage = () => {
             prolificAuthors: mapProlificAuthors(weeklyProlific),
             likedAuthors: mapPopularAuthors(weeklyPopularAuthors),
             likedBooks: mapPopularBooks(weeklyPopularBooks),
-            salesBooks: temporarySalesBooks.weekly,
           },
           monthly: {
             prolificAuthors: mapProlificAuthors(monthlyProlific),
             likedAuthors: mapPopularAuthors(monthlyPopularAuthors),
             likedBooks: mapPopularBooks(monthlyPopularBooks),
-            salesBooks: temporarySalesBooks.monthly,
           },
         });
         setRankingError(null);
@@ -386,6 +347,22 @@ const RankingsPage = () => {
     };
 
     loadRankings();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchBestsellerHighlights()
+      .then((data) => {
+        if (cancelled) return;
+        setHighlights({
+          monthly: mapHighlightBooks(data.monthly),
+          yearly: mapHighlightBooks(data.yearly),
+        });
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -435,18 +412,27 @@ const RankingsPage = () => {
           </div>
         </motion.section>
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+          <BookSection
+            title="이달의 베스트셀러"
+            icon={<Coins size={20} className="text-amber-600" />}
+            items={highlights.monthly}
+            metric="count"
+          />
+          <BookSection
+            title="올해의 베스트셀러"
+            icon={<Coins size={20} className="text-amber-600" />}
+            items={highlights.yearly}
+            metric="count"
+          />
+        </div>
+
         <motion.div key={period} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           <BookSection
             title={`${periodLabel(period)} 좋아요 책`}
             icon={<Heart size={20} className="text-rose-500" />}
             items={current.likedBooks}
             metric="likes"
-          />
-          <BookSection
-            title={`${periodLabel(period)} 베스트셀러`}
-            icon={<Coins size={20} className="text-amber-600" />}
-            items={current.salesBooks}
-            metric="sales"
           />
           <AuthorSection
             title={`${periodLabel(period)} 다작 작가`}

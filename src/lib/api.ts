@@ -135,9 +135,79 @@ const myBookItemSchema: z.ZodType<MyBookItem> = z.object({
   createdAt: z.string(),
 });
 
-export async function fetchBooks(page: number, size: number): Promise<PageResponse<BookItem>> {
-  const res = await fetchWithAuth(`/api/books?page=${page}&size=${size}`, { method: "GET" });
+export async function fetchBooks(page: number, size: number, categoryId?: number): Promise<PageResponse<BookItem>> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(size));
+  if (categoryId != null) params.set("categoryId", String(categoryId));
+
+  const res = await fetchWithAuth(`/api/books?${params.toString()}`, { method: "GET" });
   return parseApiResponse(res, pageResponseSchema(bookItemSchema), "Failed to fetch books");
+}
+
+export interface BestsellerItem {
+  bookId: string;
+  title: string;
+  coverImageUrl: string;
+  authorName: string;
+  price: number;
+  purchaseCount: number;
+  totalRevenue: number;
+  rank: number;
+  liked: boolean;
+}
+
+const bestsellerItemSchema: z.ZodType<BestsellerItem> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  coverImageUrl: z.string(),
+  authorName: z.string(),
+  price: z.number(),
+  purchaseCount: z.number(),
+  totalRevenue: z.number(),
+  rank: z.number(),
+  liked: z.boolean(),
+});
+
+// 인증 선택: 비로그인 시 liked는 false로 내려온다. categoryId 생략 시 전체 베스트셀러.
+export async function fetchBestsellers(page = 0, size = 10, categoryId?: number): Promise<CursorPageResponse<BestsellerItem>> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(size));
+  if (categoryId != null) params.set("categoryId", String(categoryId));
+
+  const res = await fetchWithAuth(`/api/books/bestsellers?${params.toString()}`, { method: "GET" });
+  return parseApiResponse(res, cursorPageResponseSchema(bestsellerItemSchema), "베스트셀러 목록 조회에 실패했습니다.");
+}
+
+export interface BestsellerHighlightItem {
+  bookId: string;
+  title: string;
+  authorName: string;
+  salesCount: number;
+}
+
+export interface BestsellerHighlights {
+  monthly: BestsellerHighlightItem[];
+  yearly: BestsellerHighlightItem[];
+}
+
+const bestsellerHighlightItemSchema: z.ZodType<BestsellerHighlightItem> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  authorName: z.string(),
+  salesCount: z.number(),
+});
+
+const bestsellerHighlightsSchema: z.ZodType<BestsellerHighlights> = z.object({
+  monthly: z.array(bestsellerHighlightItemSchema),
+  yearly: z.array(bestsellerHighlightItemSchema),
+});
+
+// 인증 불필요(공개). 호출 시점의 이번 달/올해 베스트셀러 Top 3를 반환한다.
+export async function fetchBestsellerHighlights(): Promise<BestsellerHighlights> {
+  const res = await fetchWithAuth("/api/books/bestsellers/highlights", { method: "GET" });
+  return parseApiResponse(res, bestsellerHighlightsSchema, "베스트셀러 하이라이트 조회에 실패했습니다.");
 }
 
 export async function fetchBanners(page = 0, size = 10): Promise<CursorPageResponse<BannerItem>> {
@@ -193,6 +263,40 @@ export async function fetchMyRevenue(year?: number): Promise<YearlyRevenue> {
 
   const res = await fetchWithAuth(`/api/user/me/revenue${query ? `?${query}` : ""}`, { method: "GET" });
   return parseApiResponse(res, yearlyRevenueSchema, "수익 조회에 실패했습니다.");
+}
+
+// ── 작품별 월 판매 건수 추이 ──
+
+export interface MonthlySales {
+  month: number;
+  salesCount: number;
+}
+
+export interface BookMonthlySales {
+  bookId: string;
+  year: number;
+  monthlySales: MonthlySales[];
+}
+
+const monthlySalesSchema: z.ZodType<MonthlySales> = z.object({
+  month: z.number(),
+  salesCount: z.number(),
+});
+
+const bookMonthlySalesSchema: z.ZodType<BookMonthlySales> = z.object({
+  bookId: z.string(),
+  year: z.number(),
+  monthlySales: z.array(monthlySalesSchema),
+});
+
+// 인증 필요: 로그인한 작가 본인의 작품만 조회 가능.
+export async function fetchBookMonthlySales(bookId: string, year?: number): Promise<BookMonthlySales> {
+  const params = new URLSearchParams();
+  if (year != null) params.set("year", String(year));
+  const query = params.toString();
+
+  const res = await fetchWithAuth(`/api/books/${bookId}/sales/monthly${query ? `?${query}` : ""}`, { method: "GET" });
+  return parseApiResponse(res, bookMonthlySalesSchema, "작품별 월 판매 추이 조회에 실패했습니다.");
 }
 
 // ── 작가 대시보드: 요약 / 작품별 성과 ──
@@ -286,6 +390,7 @@ export interface BookDetail {
   bookId: string;
   title: string;
   description: string;
+  authorId: string;
   authorName: string;
   coverImageUrl: string;
   pages: BookDetailPage[];
@@ -296,6 +401,7 @@ const bookDetailSchema: z.ZodType<BookDetail> = z.object({
   bookId: z.string(),
   title: z.string(),
   description: z.string(),
+  authorId: z.string(),
   authorName: z.string(),
   coverImageUrl: z.string(),
   pages: z.array(
