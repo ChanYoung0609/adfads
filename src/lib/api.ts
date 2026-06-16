@@ -170,6 +170,36 @@ export async function fetchBestsellers(page = 0, size = 10): Promise<CursorPageR
   return parseApiResponse(res, cursorPageResponseSchema(bestsellerItemSchema), "베스트셀러 목록 조회에 실패했습니다.");
 }
 
+export interface BestsellerHighlightItem {
+  bookId: string;
+  title: string;
+  authorName: string;
+  salesCount: number;
+}
+
+export interface BestsellerHighlights {
+  monthly: BestsellerHighlightItem[];
+  yearly: BestsellerHighlightItem[];
+}
+
+const bestsellerHighlightItemSchema: z.ZodType<BestsellerHighlightItem> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  authorName: z.string(),
+  salesCount: z.number(),
+});
+
+const bestsellerHighlightsSchema: z.ZodType<BestsellerHighlights> = z.object({
+  monthly: z.array(bestsellerHighlightItemSchema),
+  yearly: z.array(bestsellerHighlightItemSchema),
+});
+
+// 인증 불필요(공개). 호출 시점의 이번 달/올해 베스트셀러 Top 3를 반환한다.
+export async function fetchBestsellerHighlights(): Promise<BestsellerHighlights> {
+  const res = await fetchWithAuth("/api/books/bestsellers/highlights", { method: "GET" });
+  return parseApiResponse(res, bestsellerHighlightsSchema, "베스트셀러 하이라이트 조회에 실패했습니다.");
+}
+
 export async function fetchBanners(page = 0, size = 10): Promise<CursorPageResponse<BannerItem>> {
   const params = new URLSearchParams();
   params.set("page", String(page));
