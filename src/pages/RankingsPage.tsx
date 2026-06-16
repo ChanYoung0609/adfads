@@ -407,14 +407,13 @@ const RankingsPage = () => {
           </div>
         </motion.section>
 
-        <BookSection
-          title={`${periodLabel(period)} 베스트셀러`}
-          icon={<Coins size={20} className="text-amber-600" />}
-          items={highlights}
-          metric="count"
-        />
-
         <motion.div key={period} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+          <BookSection
+            title={`${periodLabel(period)} 베스트셀러`}
+            icon={<Coins size={20} className="text-amber-600" />}
+            items={highlights}
+            metric="count"
+          />
           <BookSection
             title={`${periodLabel(period)} 좋아요 책`}
             icon={<Heart size={20} className="text-rose-500" />}
