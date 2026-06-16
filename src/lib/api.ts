@@ -609,6 +609,60 @@ export async function unfollowAuthor(authorId: string): Promise<AuthorFollowStat
   return parseApiResponse(res, authorFollowStatusSchema, "팔로우 취소에 실패했습니다.");
 }
 
+// ── 작가 통계 ──
+
+export interface AuthorStats {
+  bookCount: number;
+  totalLikeCount: number;
+  averageRating: number;
+  followerCount: number;
+}
+
+const authorStatsSchema: z.ZodType<AuthorStats> = z.object({
+  bookCount: z.number(),
+  totalLikeCount: z.number(),
+  averageRating: z.number(),
+  followerCount: z.number(),
+});
+
+// 인증 불필요(공개).
+export async function fetchAuthorStats(authorId: string): Promise<AuthorStats> {
+  const res = await fetchWithAuth(`/api/authors/${authorId}/stats`, { method: "GET" });
+  return parseApiResponse(res, authorStatsSchema, "작가 통계 조회에 실패했습니다.");
+}
+
+// ── 작가 작품 목록 ──
+
+export type AuthorBookVisibility = "PUBLIC" | "PAID";
+
+export interface AuthorBookResponse {
+  bookId: string;
+  title: string;
+  coverImageUrl: string;
+  visibility: AuthorBookVisibility;
+  price: number | null;
+  publishedAt: string;
+}
+
+const authorBookSchema: z.ZodType<AuthorBookResponse> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  coverImageUrl: z.string(),
+  visibility: z.enum(["PUBLIC", "PAID"]),
+  price: z.number().nullable(),
+  publishedAt: z.string(),
+});
+
+// 인증 불필요(공개).
+export async function fetchAuthorBooks(
+  authorId: string,
+  page = 0,
+  size = 10,
+): Promise<CursorPageResponse<AuthorBookResponse>> {
+  const res = await fetchWithAuth(`/api/authors/${authorId}/books?page=${page}&size=${size}`, { method: "GET" });
+  return parseApiResponse(res, cursorPageResponseSchema(authorBookSchema), "작가 작품 목록 조회에 실패했습니다.");
+}
+
 export async function fetchReadingProgress(bookId: string): Promise<ReadingProgress> {
   const res = await fetchWithAuth(`/api/books/${bookId}/reading-progress`, { method: "GET" });
   return parseApiResponse(res, readingProgressSchema, "내 진행도 조회에 실패했습니다.");
