@@ -427,6 +427,7 @@ export interface BookDetail {
   authorId: string;
   authorName: string;
   coverImageUrl: string;
+  categoryName?: string | null;
   pages: BookDetailPage[];
   characters: BookDetailCharacter[];
 }
@@ -438,6 +439,7 @@ const bookDetailSchema: z.ZodType<BookDetail> = z.object({
   authorId: z.string(),
   authorName: z.string(),
   coverImageUrl: z.string(),
+  categoryName: z.string().nullable().optional(),
   pages: z.array(
     z.object({
       pageNumber: z.number(),
