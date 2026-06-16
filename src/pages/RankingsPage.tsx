@@ -303,9 +303,8 @@ const RankingsPage = () => {
     weekly: emptyRankingData(),
     monthly: emptyRankingData(),
   });
-  const [highlights, setHighlights] = useState<{ monthly: BookRankItem[]; yearly: BookRankItem[] }>({
+  const [highlights, setHighlights] = useState<{ monthly: BookRankItem[] }>({
     monthly: [],
-    yearly: [],
   });
   const [rankingError, setRankingError] = useState<string | null>(null);
   const isMonthly = period === "monthly";
@@ -359,7 +358,6 @@ const RankingsPage = () => {
         if (cancelled) return;
         setHighlights({
           monthly: mapHighlightBooks(data.monthly),
-          yearly: mapHighlightBooks(data.yearly),
         });
       })
       .catch(() => {});
@@ -412,20 +410,12 @@ const RankingsPage = () => {
           </div>
         </motion.section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-          <BookSection
-            title="이달의 베스트셀러"
-            icon={<Coins size={20} className="text-amber-600" />}
-            items={highlights.monthly}
-            metric="count"
-          />
-          <BookSection
-            title="올해의 베스트셀러"
-            icon={<Coins size={20} className="text-amber-600" />}
-            items={highlights.yearly}
-            metric="count"
-          />
-        </div>
+        <BookSection
+          title="이달의 베스트셀러"
+          icon={<Coins size={20} className="text-amber-600" />}
+          items={highlights.monthly}
+          metric="count"
+        />
 
         <motion.div key={period} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           <BookSection
