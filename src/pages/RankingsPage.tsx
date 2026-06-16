@@ -113,7 +113,7 @@ const mapHighlightBooks = (items: BestsellerHighlightItem[]): BookRankItem[] =>
     author: item.authorName,
     likes: 0,
     sales: item.salesCount,
-    coverImageUrl: null,
+    coverImageUrl: item.coverImageUrl,
   }));
 
 type AuthorSectionProps = {
@@ -303,10 +303,7 @@ const RankingsPage = () => {
     weekly: emptyRankingData(),
     monthly: emptyRankingData(),
   });
-  const [highlights, setHighlights] = useState<{ monthly: BookRankItem[]; yearly: BookRankItem[] }>({
-    monthly: [],
-    yearly: [],
-  });
+  const [highlights, setHighlights] = useState<BookRankItem[]>([]);
   const [rankingError, setRankingError] = useState<string | null>(null);
   const isMonthly = period === "monthly";
 
@@ -354,19 +351,17 @@ const RankingsPage = () => {
 
   useEffect(() => {
     let cancelled = false;
-    fetchBestsellerHighlights()
+    const bestsellerPeriod = period === "weekly" ? "WEEKLY" : "MONTHLY";
+    fetchBestsellerHighlights(bestsellerPeriod)
       .then((data) => {
         if (cancelled) return;
-        setHighlights({
-          monthly: mapHighlightBooks(data.monthly),
-          yearly: mapHighlightBooks(data.yearly),
-        });
+        setHighlights(mapHighlightBooks(data.items));
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [period]);
 
   const current = useMemo(() => rankingMap[period], [period, rankingMap]);
 
@@ -412,20 +407,12 @@ const RankingsPage = () => {
           </div>
         </motion.section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-          <BookSection
-            title="이달의 베스트셀러"
-            icon={<Coins size={20} className="text-amber-600" />}
-            items={highlights.monthly}
-            metric="count"
-          />
-          <BookSection
-            title="올해의 베스트셀러"
-            icon={<Coins size={20} className="text-amber-600" />}
-            items={highlights.yearly}
-            metric="count"
-          />
-        </div>
+        <BookSection
+          title={`${periodLabel(period)} 베스트셀러`}
+          icon={<Coins size={20} className="text-amber-600" />}
+          items={highlights}
+          metric="count"
+        />
 
         <motion.div key={period} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           <BookSection

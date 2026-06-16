@@ -180,33 +180,37 @@ export async function fetchBestsellers(page = 0, size = 10, categoryId?: number)
   return parseApiResponse(res, cursorPageResponseSchema(bestsellerItemSchema), "베스트셀러 목록 조회에 실패했습니다.");
 }
 
+export type BestsellerPeriod = "WEEKLY" | "MONTHLY";
+
 export interface BestsellerHighlightItem {
   bookId: string;
   title: string;
+  coverImageUrl: string;
   authorName: string;
   salesCount: number;
 }
 
 export interface BestsellerHighlights {
-  monthly: BestsellerHighlightItem[];
-  yearly: BestsellerHighlightItem[];
+  period: BestsellerPeriod;
+  items: BestsellerHighlightItem[];
 }
 
 const bestsellerHighlightItemSchema: z.ZodType<BestsellerHighlightItem> = z.object({
   bookId: z.string(),
   title: z.string(),
+  coverImageUrl: z.string(),
   authorName: z.string(),
   salesCount: z.number(),
 });
 
 const bestsellerHighlightsSchema: z.ZodType<BestsellerHighlights> = z.object({
-  monthly: z.array(bestsellerHighlightItemSchema),
-  yearly: z.array(bestsellerHighlightItemSchema),
+  period: z.enum(["WEEKLY", "MONTHLY"]),
+  items: z.array(bestsellerHighlightItemSchema),
 });
 
-// 인증 불필요(공개). 호출 시점의 이번 달/올해 베스트셀러 Top 3를 반환한다.
-export async function fetchBestsellerHighlights(): Promise<BestsellerHighlights> {
-  const res = await fetchWithAuth("/api/books/bestsellers/highlights", { method: "GET" });
+// 인증 불필요(공개). 선택한 기간(주간/월간)의 베스트셀러 Top 3를 반환한다. 기본값 MONTHLY.
+export async function fetchBestsellerHighlights(period: BestsellerPeriod = "MONTHLY"): Promise<BestsellerHighlights> {
+  const res = await fetchWithAuth(`/api/books/bestsellers/highlights?period=${period}`, { method: "GET" });
   return parseApiResponse(res, bestsellerHighlightsSchema, "베스트셀러 하이라이트 조회에 실패했습니다.");
 }
 
