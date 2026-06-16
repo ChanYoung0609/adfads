@@ -34,6 +34,9 @@ const AuthorProfilePage = () => {
   const [stats, setStats] = useState<AuthorStats | null>(null);
   const [following, setFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState<number | null>(null);
+  const [followAuthorName, setFollowAuthorName] = useState<string | null>(null);
+  const [followAuthorImage, setFollowAuthorImage] = useState<string | null>(null);
+  const [followAuthorBio, setFollowAuthorBio] = useState<string | null>(null);
   const [followPending, setFollowPending] = useState(false);
   const [books, setBooks] = useState<AuthorBookResponse[]>([]);
   const [booksTotal, setBooksTotal] = useState(0);
@@ -72,11 +75,17 @@ const AuthorProfilePage = () => {
     let cancelled = false;
     setFollowing(false);
     setFollowerCount(null);
+    setFollowAuthorName(null);
+    setFollowAuthorImage(null);
+    setFollowAuthorBio(null);
     fetchAuthorFollowStatus(id)
       .then((status) => {
         if (cancelled) return;
         setFollowing(status.followedByMe);
         setFollowerCount(status.followerCount);
+        setFollowAuthorName(status.authorName);
+        setFollowAuthorImage(status.authorProfileImage);
+        setFollowAuthorBio(status.authorBio);
       })
       .catch(() => {});
     return () => {
@@ -105,10 +114,11 @@ const AuthorProfilePage = () => {
     };
   }, [id]);
 
-  const displayName = profile?.nickname ?? "";
-  const displayBio = profile?.bio?.trim() ?? "";
+  const displayName = profile?.nickname ?? followAuthorName ?? "";
+  const displayBio = (profile?.bio ?? followAuthorBio ?? "").trim();
   const displayJoinedAt = profile ? formatJoinedAt(profile.joinedAt) : "";
-  const profileImage = id ? `https://i.pravatar.cc/240?u=${id}` : "https://i.pravatar.cc/240";
+  const fallbackImage = id ? `https://i.pravatar.cc/240?u=${id}` : "https://i.pravatar.cc/240";
+  const profileImage = followAuthorImage ?? fallbackImage;
 
   const handleToggleFollow = async () => {
     if (!id || followPending) return;
@@ -121,6 +131,9 @@ const AuthorProfilePage = () => {
       const status = following ? await unfollowAuthor(id) : await followAuthor(id);
       setFollowing(status.followedByMe);
       setFollowerCount(status.followerCount);
+      setFollowAuthorName(status.authorName);
+      setFollowAuthorImage(status.authorProfileImage);
+      setFollowAuthorBio(status.authorBio);
     } catch (err) {
       alert(err instanceof Error ? err.message : "요청에 실패했습니다.");
     } finally {

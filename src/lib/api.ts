@@ -689,12 +689,18 @@ export async function fetchAuthorProfile(userId: string): Promise<AuthorProfile>
 
 export interface AuthorFollowStatus {
   authorId: string;
+  authorName: string;
+  authorProfileImage: string | null;
+  authorBio: string | null;
   followerCount: number;
   followedByMe: boolean;
 }
 
 const authorFollowStatusSchema: z.ZodType<AuthorFollowStatus> = z.object({
   authorId: z.string(),
+  authorName: z.string(),
+  authorProfileImage: z.string().nullable(),
+  authorBio: z.string().nullable(),
   followerCount: z.number(),
   followedByMe: z.boolean(),
 });

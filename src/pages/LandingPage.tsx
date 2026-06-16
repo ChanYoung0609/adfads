@@ -26,20 +26,39 @@ type SliderSectionProps = {
 
 const SliderSection = ({ title, icon, books, accentClass, showRank = false, moreLink }: SliderSectionProps) => {
   const sliderRef = useRef<HTMLDivElement>(null);
+  // 무한 루프(앞뒤로 복제)는 책이 컨테이너를 넘칠 때만 의미가 있다.
+  // 책이 적으면 같은 책이 여러 번 보이므로 루프를 끈다.
+  const [loop, setLoop] = useState(false);
   const displayBooks = useMemo(
-    () => (showRank ? books : books.length > 0 ? [...books, ...books, ...books] : []),
-    [books, showRank],
+    () => (!showRank && loop && books.length > 0 ? [...books, ...books, ...books] : books),
+    [books, showRank, loop],
   );
 
   useEffect(() => {
     const slider = sliderRef.current;
-    if (!slider || books.length === 0 || showRank) return;
-    slider.scrollLeft = slider.scrollWidth / 3;
-  }, [books, showRank]);
+    if (!slider || showRank || books.length === 0) {
+      setLoop(false);
+      return;
+    }
+    const measure = () => {
+      // loop이 켜져 한 벌이 3배로 렌더된 상태라면 scrollWidth/3가 원래 한 벌의 너비다.
+      const singleWidth = loop ? slider.scrollWidth / 3 : slider.scrollWidth;
+      setLoop(singleWidth > slider.clientWidth + 1);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [books, showRank, loop]);
 
   useEffect(() => {
     const slider = sliderRef.current;
-    if (!slider || books.length === 0 || showRank) return;
+    if (!slider || !loop || showRank) return;
+    slider.scrollLeft = slider.scrollWidth / 3;
+  }, [books, showRank, loop]);
+
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider || !loop || showRank) return;
 
     let timeout: ReturnType<typeof setTimeout>;
     const onScrollEnd = () => {
@@ -61,7 +80,7 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false, more
       slider.removeEventListener("scroll", onScrollEnd);
       clearTimeout(timeout);
     };
-  }, [books, showRank]);
+  }, [books, showRank, loop]);
 
   const scroll = (direction: "left" | "right") => {
     if (!sliderRef.current) return;
