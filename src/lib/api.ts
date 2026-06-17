@@ -30,18 +30,6 @@ async function parseApiResponse<T>(
   return result.data;
 }
 
-function pageResponseSchema<T>(item: z.ZodType<T>): z.ZodType<PageResponse<T>> {
-  return z.object({
-    content: z.array(item),
-    totalElements: z.number(),
-    totalPages: z.number(),
-    last: z.boolean(),
-    first: z.boolean(),
-    number: z.number(),
-    size: z.number(),
-  }) as unknown as z.ZodType<PageResponse<T>>;
-}
-
 function cursorPageResponseSchema<T>(item: z.ZodType<T>): z.ZodType<CursorPageResponse<T>> {
   return z.object({
     items: z.array(item),
@@ -63,17 +51,9 @@ export interface BookItem {
   title: string;
   coverImageUrl: string;
   authorName: string;
+  /** null 또는 0 → 무료, 양수 → 유료 */
+  price?: number | null;
   liked?: boolean;
-}
-
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  last: boolean;
-  first: boolean;
-  number: number;
-  size: number;
 }
 
 export interface CursorPageResponse<T> {
@@ -114,6 +94,7 @@ const bookItemSchema: z.ZodType<BookItem> = z.object({
   title: z.string(),
   coverImageUrl: z.string(),
   authorName: z.string(),
+  price: z.number().nullable().optional(),
   liked: z.boolean().optional(),
 });
 
@@ -135,14 +116,14 @@ const myBookItemSchema: z.ZodType<MyBookItem> = z.object({
   createdAt: z.string(),
 });
 
-export async function fetchBooks(page: number, size: number, categoryId?: number): Promise<PageResponse<BookItem>> {
+export async function fetchBooks(page: number, size: number, categoryId?: number): Promise<CursorPageResponse<BookItem>> {
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("size", String(size));
   if (categoryId != null) params.set("categoryId", String(categoryId));
 
   const res = await fetchWithAuth(`/api/books?${params.toString()}`, { method: "GET" });
-  return parseApiResponse(res, pageResponseSchema(bookItemSchema), "Failed to fetch books");
+  return parseApiResponse(res, cursorPageResponseSchema(bookItemSchema), "Failed to fetch books");
 }
 
 export interface BestsellerItem {
@@ -228,14 +209,14 @@ export async function fetchMyBooks(
   page: number,
   size: number,
   status?: MyBookStatus
-): Promise<PageResponse<MyBookItem>> {
+): Promise<CursorPageResponse<MyBookItem>> {
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("size", String(size));
   if (status) params.set("status", status);
 
   const res = await fetchWithAuth(`/api/books/me?${params.toString()}`, { method: "GET" });
-  return parseApiResponse(res, pageResponseSchema(myBookItemSchema), "내 책 목록 조회에 실패했습니다.");
+  return parseApiResponse(res, cursorPageResponseSchema(myBookItemSchema), "내 책 목록 조회에 실패했습니다.");
 }
 
 // ── 좋아요한 책 ──
@@ -496,6 +477,40 @@ export async function reportBook(bookId: string, payload: ReportBookRequest): Pr
   }
 
   return typeof json?.data === "string" ? json.data : "신고가 등록되었습니다.";
+}
+
+// ── 유료 출판 ──
+
+// 인증 필수. 본인 소유의 완성(COMPLETED) 상태 책만 유료 출판 가능. price는 1 이상 정수.
+export async function publishPaidBook(bookId: string, price: number): Promise<string> {
+  const res = await fetchWithAuth(`/api/books/${bookId}/publish/paid`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ price }),
+  });
+
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const code = json?.error?.code;
+    const message =
+      code === "BOOK_001"
+        ? "책을 찾을 수 없습니다."
+        : code === "BOOK_003"
+          ? "본인의 책만 출판할 수 있습니다."
+          : code === "BOOK_004"
+            ? "완성된 책만 출판할 수 있습니다."
+            : code === "INVALID_INPUT"
+              ? "가격은 1 이상의 정수여야 합니다."
+              : json?.error?.message || "유료 출판에 실패했습니다.";
+    throw new Error(message);
+  }
+
+  if (!json?.success) {
+    throw new Error(json?.error?.message || "유료 출판에 실패했습니다.");
+  }
+
+  return typeof json?.data === "string" ? json.data : "유료 출판 완료";
 }
 
 // ── 리뷰 ──

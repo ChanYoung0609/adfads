@@ -158,6 +158,11 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false, more
                     {rank}
                   </div>
                 )}
+                {book.price != null && book.price > 0 && (
+                  <span className="absolute bottom-2 right-2 rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-on-primary shadow-md">
+                    {book.price.toLocaleString()}원
+                  </span>
+                )}
               </div>
               <h3 className="font-bold text-sm md:text-base text-on-surface line-clamp-2 leading-snug min-h-[2.75em] group-hover:text-primary transition-colors">
                 {book.title}
@@ -185,7 +190,7 @@ const LandingPage = () => {
     let cancelled = false;
     fetchBooks(0, 20, categoryId)
       .then((data) => {
-        if (!cancelled) setBooks(data.content);
+        if (!cancelled) setBooks(data.items);
       })
       .catch(() => {
         if (!cancelled) setBooks([]);

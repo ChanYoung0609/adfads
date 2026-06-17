@@ -48,7 +48,7 @@ const GalleryPage = () => {
 
       setBooks((prev) => {
         const map = new Map(prev.map((b) => [b.bookId, b]));
-        data.content.forEach((b) => map.set(b.bookId, b));
+        data.items.forEach((b) => map.set(b.bookId, b));
         return Array.from(map.values());
       });
 
@@ -293,6 +293,12 @@ const GalleryPage = () => {
                           <BookOpen size={32} />
                         </div>
                       </div>
+
+                      {book.price != null && book.price > 0 && (
+                        <span className="absolute top-2 left-2 z-30 rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-on-primary shadow-md">
+                          {book.price.toLocaleString()}원
+                        </span>
+                      )}
                     </Link>
 
                     <button
