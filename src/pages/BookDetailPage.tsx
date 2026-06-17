@@ -794,14 +794,6 @@ const BookDetailPage = () => {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleExportPdf}
-        className="fixed bottom-6 right-6 z-[80] inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-on-primary font-bold shadow-xl hover:bg-secondary transition-colors active:scale-95"
-      >
-        <FileDown size={18} />
-        PDF로 추출하기
-      </button>
 
       {isReportOpen && (
         <div className="fixed inset-0 z-[90] bg-black/55 px-4 flex items-center justify-center" onClick={() => !reportSubmitting && setIsReportOpen(false)}>
