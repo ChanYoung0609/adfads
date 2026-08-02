@@ -48,7 +48,7 @@ const GalleryPage = () => {
 
       setBooks((prev) => {
         const map = new Map(prev.map((b) => [b.bookId, b]));
-        data.content.forEach((b) => map.set(b.bookId, b));
+        data.items.forEach((b) => map.set(b.bookId, b));
         return Array.from(map.values());
       });
 
@@ -116,7 +116,7 @@ const GalleryPage = () => {
       result = result.filter(
         (book) =>
           book.title.toLowerCase().includes(normalized) ||
-          book.authorName.toLowerCase().includes(normalized)
+          (book.authorName ?? "").toLowerCase().includes(normalized)
       );
     }
 
@@ -279,20 +279,32 @@ const GalleryPage = () => {
                       to={`/book/${book.bookId}`}
                       className="absolute inset-0 rounded-2xl overflow-hidden book-shadow"
                     >
-                      <img
-                        src={book.coverImageUrl}
-                        alt={book.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                      />
+                      {book.coverImageUrl ? (
+                        <img
+                          src={book.coverImageUrl}
+                          alt={book.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-surface-container text-on-surface-variant/50">
+                          <BookOpen size={40} />
+                        </div>
+                      )}
 
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
                         <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary scale-0 group-hover:scale-100 transition-transform duration-500">
                           <BookOpen size={32} />
                         </div>
                       </div>
+
+                      {book.price != null && book.price > 0 && (
+                        <span className="absolute top-2 left-2 z-30 rounded-full bg-primary px-2.5 py-1 text-xs font-bold text-on-primary shadow-md">
+                          {book.price.toLocaleString()}원
+                        </span>
+                      )}
                     </Link>
 
                     <button

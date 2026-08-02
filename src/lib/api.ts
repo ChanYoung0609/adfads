@@ -30,17 +30,12 @@ async function parseApiResponse<T>(
   return result.data;
 }
 
-function pageResponseSchema<T>(item: z.ZodType<T>): z.ZodType<PageResponse<T>> {
-  return z.object({
-    content: z.array(item),
-    totalElements: z.number(),
-    totalPages: z.number(),
-    last: z.boolean(),
-    first: z.boolean(),
-    number: z.number(),
-    size: z.number(),
-  }) as unknown as z.ZodType<PageResponse<T>>;
-}
+/**
+ * 표지·작가명은 DB에서 nullable이다. 특히 갓 만든 책(DRAFT)은 표지가 아직 없어 null로 내려온다.
+ * 이걸 필수 문자열로 두면 목록 안에 그런 책이 한 권만 섞여도 배열 전체 검증이 깨져
+ * "네트워크엔 데이터가 오는데 화면은 빈 목록"이 된다. 화면에서 플레이스홀더로 처리한다.
+ */
+const nullableString = z.string().nullable().optional().transform((v) => v ?? null);
 
 function cursorPageResponseSchema<T>(item: z.ZodType<T>): z.ZodType<CursorPageResponse<T>> {
   return z.object({
@@ -61,19 +56,11 @@ function cursorPageResponseSchema<T>(item: z.ZodType<T>): z.ZodType<CursorPageRe
 export interface BookItem {
   bookId: string;
   title: string;
-  coverImageUrl: string;
-  authorName: string;
+  coverImageUrl: string | null;
+  authorName: string | null;
+  /** null 또는 0 → 무료, 양수 → 유료 */
+  price?: number | null;
   liked?: boolean;
-}
-
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  last: boolean;
-  first: boolean;
-  number: number;
-  size: number;
 }
 
 export interface CursorPageResponse<T> {
@@ -102,8 +89,8 @@ export type MyBookVisibility = "PRIVATE" | "PUBLIC" | "PAID";
 export interface MyBookItem {
   bookId: string;
   title: string;
-  authorName: string;
-  coverImageUrl: string;
+  authorName: string | null;
+  coverImageUrl: string | null;
   status: MyBookStatus;
   visibility: MyBookVisibility;
   createdAt: string;
@@ -112,8 +99,9 @@ export interface MyBookItem {
 const bookItemSchema: z.ZodType<BookItem> = z.object({
   bookId: z.string(),
   title: z.string(),
-  coverImageUrl: z.string(),
-  authorName: z.string(),
+  coverImageUrl: nullableString,
+  authorName: nullableString,
+  price: z.number().nullable().optional(),
   liked: z.boolean().optional(),
 });
 
@@ -128,28 +116,28 @@ const bannerItemSchema: z.ZodType<BannerItem> = z.object({
 const myBookItemSchema: z.ZodType<MyBookItem> = z.object({
   bookId: z.string(),
   title: z.string(),
-  authorName: z.string(),
-  coverImageUrl: z.string(),
+  authorName: nullableString,
+  coverImageUrl: nullableString,
   status: z.enum(["DRAFT", "IN_PROGRESS", "COMPLETED"]),
   visibility: z.enum(["PRIVATE", "PUBLIC", "PAID"]),
   createdAt: z.string(),
 });
 
-export async function fetchBooks(page: number, size: number, categoryId?: number): Promise<PageResponse<BookItem>> {
+export async function fetchBooks(page: number, size: number, categoryId?: number): Promise<CursorPageResponse<BookItem>> {
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("size", String(size));
   if (categoryId != null) params.set("categoryId", String(categoryId));
 
   const res = await fetchWithAuth(`/api/books?${params.toString()}`, { method: "GET" });
-  return parseApiResponse(res, pageResponseSchema(bookItemSchema), "Failed to fetch books");
+  return parseApiResponse(res, cursorPageResponseSchema(bookItemSchema), "Failed to fetch books");
 }
 
 export interface BestsellerItem {
   bookId: string;
   title: string;
-  coverImageUrl: string;
-  authorName: string;
+  coverImageUrl: string | null;
+  authorName: string | null;
   price: number;
   purchaseCount: number;
   totalRevenue: number;
@@ -160,8 +148,8 @@ export interface BestsellerItem {
 const bestsellerItemSchema: z.ZodType<BestsellerItem> = z.object({
   bookId: z.string(),
   title: z.string(),
-  coverImageUrl: z.string(),
-  authorName: z.string(),
+  coverImageUrl: nullableString,
+  authorName: nullableString,
   price: z.number(),
   purchaseCount: z.number(),
   totalRevenue: z.number(),
@@ -185,8 +173,8 @@ export type BestsellerPeriod = "WEEKLY" | "MONTHLY";
 export interface BestsellerHighlightItem {
   bookId: string;
   title: string;
-  coverImageUrl: string;
-  authorName: string;
+  coverImageUrl: string | null;
+  authorName: string | null;
   salesCount: number;
 }
 
@@ -198,8 +186,8 @@ export interface BestsellerHighlights {
 const bestsellerHighlightItemSchema: z.ZodType<BestsellerHighlightItem> = z.object({
   bookId: z.string(),
   title: z.string(),
-  coverImageUrl: z.string(),
-  authorName: z.string(),
+  coverImageUrl: nullableString,
+  authorName: nullableString,
   salesCount: z.number(),
 });
 
@@ -228,14 +216,14 @@ export async function fetchMyBooks(
   page: number,
   size: number,
   status?: MyBookStatus
-): Promise<PageResponse<MyBookItem>> {
+): Promise<CursorPageResponse<MyBookItem>> {
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("size", String(size));
   if (status) params.set("status", status);
 
   const res = await fetchWithAuth(`/api/books/me?${params.toString()}`, { method: "GET" });
-  return parseApiResponse(res, pageResponseSchema(myBookItemSchema), "내 책 목록 조회에 실패했습니다.");
+  return parseApiResponse(res, cursorPageResponseSchema(myBookItemSchema), "내 책 목록 조회에 실패했습니다.");
 }
 
 // ── 좋아요한 책 ──
@@ -243,8 +231,8 @@ export async function fetchMyBooks(
 export interface LikedBookItem {
   bookId: string;
   title: string;
-  coverImageUrl: string;
-  authorName: string;
+  coverImageUrl: string | null;
+  authorName: string | null;
   likedAt: string;
   liked: boolean;
 }
@@ -252,8 +240,8 @@ export interface LikedBookItem {
 const likedBookItemSchema: z.ZodType<LikedBookItem> = z.object({
   bookId: z.string(),
   title: z.string(),
-  coverImageUrl: z.string(),
-  authorName: z.string(),
+  coverImageUrl: nullableString,
+  authorName: nullableString,
   likedAt: z.string(),
   liked: z.boolean(),
 });
@@ -425,11 +413,16 @@ export interface BookDetail {
   title: string;
   description: string;
   authorId: string;
-  authorName: string;
-  coverImageUrl: string;
+  authorName: string | null;
+  coverImageUrl: string | null;
   categoryName?: string | null;
   pages: BookDetailPage[];
+  /** 서버 BookDetailResponse에는 아직 없는 필드다. 안 오면 빈 배열로 채운다. */
   characters: BookDetailCharacter[];
+  /** 유료 책 미리보기 페이월 상태 (BookDetailResponse.locked/purchased/totalPageCount) */
+  locked: boolean;
+  purchased: boolean;
+  totalPageCount: number;
 }
 
 const bookDetailSchema: z.ZodType<BookDetail> = z.object({
@@ -437,22 +430,28 @@ const bookDetailSchema: z.ZodType<BookDetail> = z.object({
   title: z.string(),
   description: z.string(),
   authorId: z.string(),
-  authorName: z.string(),
-  coverImageUrl: z.string(),
+  authorName: nullableString,
+  coverImageUrl: nullableString,
   categoryName: z.string().nullable().optional(),
+  locked: z.boolean().optional().transform((v) => v ?? false),
+  purchased: z.boolean().optional().transform((v) => v ?? false),
+  totalPageCount: z.number().optional().transform((v) => v ?? 0),
   pages: z.array(
     z.object({
       pageNumber: z.number(),
       content: z.string(),
-      imageUrl: z.string().optional(),
+      imageUrl: z.string().nullable().optional().transform((v) => v ?? undefined),
     })
   ),
-  characters: z.array(
-    z.object({
-      name: z.string(),
-      description: z.string(),
-    })
-  ),
+  characters: z
+    .array(
+      z.object({
+        name: z.string(),
+        description: z.string(),
+      })
+    )
+    .optional()
+    .transform((v) => v ?? []),
 });
 
 export async function fetchBookDetail(bookId: string): Promise<BookDetail> {
@@ -496,6 +495,40 @@ export async function reportBook(bookId: string, payload: ReportBookRequest): Pr
   }
 
   return typeof json?.data === "string" ? json.data : "신고가 등록되었습니다.";
+}
+
+// ── 유료 출판 ──
+
+// 인증 필수. 본인 소유의 완성(COMPLETED) 상태 책만 유료 출판 가능. price는 1 이상 정수.
+export async function publishPaidBook(bookId: string, price: number): Promise<string> {
+  const res = await fetchWithAuth(`/api/books/${bookId}/publish/paid`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ price }),
+  });
+
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const code = json?.error?.code;
+    const message =
+      code === "BOOK_001"
+        ? "책을 찾을 수 없습니다."
+        : code === "BOOK_003"
+          ? "본인의 책만 출판할 수 있습니다."
+          : code === "BOOK_004"
+            ? "완성된 책만 출판할 수 있습니다."
+            : code === "INVALID_INPUT"
+              ? "가격은 1 이상의 정수여야 합니다."
+              : json?.error?.message || "유료 출판에 실패했습니다.";
+    throw new Error(message);
+  }
+
+  if (!json?.success) {
+    throw new Error(json?.error?.message || "유료 출판에 실패했습니다.");
+  }
+
+  return typeof json?.data === "string" ? json.data : "유료 출판 완료";
 }
 
 // ── 리뷰 ──
@@ -782,7 +815,7 @@ export type AuthorBookVisibility = "PUBLIC" | "PAID";
 export interface AuthorBookResponse {
   bookId: string;
   title: string;
-  coverImageUrl: string;
+  coverImageUrl: string | null;
   visibility: AuthorBookVisibility;
   price: number | null;
   publishedAt: string;
@@ -791,7 +824,7 @@ export interface AuthorBookResponse {
 const authorBookSchema: z.ZodType<AuthorBookResponse> = z.object({
   bookId: z.string(),
   title: z.string(),
-  coverImageUrl: z.string(),
+  coverImageUrl: nullableString,
   visibility: z.enum(["PUBLIC", "PAID"]),
   price: z.number().nullable(),
   publishedAt: z.string(),

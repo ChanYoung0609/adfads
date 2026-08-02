@@ -110,7 +110,7 @@ const mapHighlightBooks = (items: BestsellerHighlightItem[]): BookRankItem[] =>
   items.slice(0, 3).map((item) => ({
     id: item.bookId,
     title: item.title,
-    author: item.authorName,
+    author: item.authorName ?? "이름 없음",
     likes: 0,
     sales: item.salesCount,
     coverImageUrl: item.coverImageUrl,

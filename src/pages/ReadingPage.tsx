@@ -113,7 +113,7 @@ const ReadingPage = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.8 }}
-                src={book.pages[currentPage].imageUrl || book.coverImageUrl}
+                src={book.pages[currentPage].imageUrl || book.coverImageUrl || undefined}
                 alt="페이지 일러스트"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"

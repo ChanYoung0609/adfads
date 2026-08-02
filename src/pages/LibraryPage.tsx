@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Plus, Wand2, Image as ImageIcon } from "lucide-react";
-import { fetchMyBooks, fetchMyLikedBooks, type LikedBookItem, type MyBookItem } from "../lib/api";
+import { Plus, Wand2, Image as ImageIcon, Coins, X } from "lucide-react";
+import { fetchMyBooks, fetchMyLikedBooks, publishPaidBook, type LikedBookItem, type MyBookItem } from "../lib/api";
 import { isLoggedIn } from "../lib/auth";
 
 type LibraryTab = "working" | "completed" | "liked";
@@ -57,6 +57,56 @@ const LibraryPage = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 유료 출판 모달
+  const [publishTarget, setPublishTarget] = useState<MyBookItem | null>(null);
+  const [priceInput, setPriceInput] = useState("");
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const [publishSuccess, setPublishSuccess] = useState<string | null>(null);
+
+  const openPublishModal = (book: MyBookItem) => {
+    setPublishTarget(book);
+    setPriceInput("");
+    setPublishError(null);
+  };
+
+  const closePublishModal = () => {
+    if (publishing) return;
+    setPublishTarget(null);
+    setPublishError(null);
+  };
+
+  const handleConfirmPublish = async () => {
+    if (!publishTarget) return;
+
+    const price = Number(priceInput);
+    if (!Number.isInteger(price) || price < 1) {
+      setPublishError("가격은 1 이상의 정수여야 합니다.");
+      return;
+    }
+
+    setPublishing(true);
+    setPublishError(null);
+    try {
+      await publishPaidBook(publishTarget.bookId, price);
+      setCompletedBooks((prev) =>
+        prev.map((b) => (b.bookId === publishTarget.bookId ? { ...b, visibility: "PAID" } : b))
+      );
+      setPublishSuccess(`'${publishTarget.title}'을(를) ${price.toLocaleString()}원에 유료 출판했어요.`);
+      setPublishTarget(null);
+    } catch (e) {
+      setPublishError(e instanceof Error ? e.message : "유료 출판에 실패했습니다.");
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!publishSuccess) return;
+    const timer = setTimeout(() => setPublishSuccess(null), 4000);
+    return () => clearTimeout(timer);
+  }, [publishSuccess]);
+
   const loadInitial = async () => {
     setLoading(true);
     setError(null);
@@ -68,9 +118,9 @@ const LibraryPage = () => {
         fetchMyBooks(0, PAGE_SIZE, "COMPLETED"),
       ]);
 
-      setDraftBooks(draft.content ?? []);
-      setInProgressBooks(inProgress.content ?? []);
-      setCompletedBooks(completed.content ?? []);
+      setDraftBooks(draft.items ?? []);
+      setInProgressBooks(inProgress.items ?? []);
+      setCompletedBooks(completed.items ?? []);
 
       setDraftPage(0);
       setInProgressPage(0);
@@ -144,7 +194,7 @@ const LibraryPage = () => {
           const nextDraftPage = draftPage + 1;
           tasks.push(
             fetchMyBooks(nextDraftPage, PAGE_SIZE, "DRAFT").then((res) => {
-              setDraftBooks((prev) => [...prev, ...(res.content ?? [])]);
+              setDraftBooks((prev) => [...prev, ...(res.items ?? [])]);
               setDraftPage(nextDraftPage);
               setHasMoreDraft(!res.last);
             })
@@ -155,7 +205,7 @@ const LibraryPage = () => {
           const nextProgressPage = inProgressPage + 1;
           tasks.push(
             fetchMyBooks(nextProgressPage, PAGE_SIZE, "IN_PROGRESS").then((res) => {
-              setInProgressBooks((prev) => [...prev, ...(res.content ?? [])]);
+              setInProgressBooks((prev) => [...prev, ...(res.items ?? [])]);
               setInProgressPage(nextProgressPage);
               setHasMoreInProgress(!res.last);
             })
@@ -166,7 +216,7 @@ const LibraryPage = () => {
       } else if (activeTab === "completed" && hasMoreCompleted) {
         const nextPage = completedPage + 1;
         const res = await fetchMyBooks(nextPage, PAGE_SIZE, "COMPLETED");
-        setCompletedBooks((prev) => [...prev, ...(res.content ?? [])]);
+        setCompletedBooks((prev) => [...prev, ...(res.items ?? [])]);
         setCompletedPage(nextPage);
         setHasMoreCompleted(!res.last);
       } else if (activeTab === "liked" && hasMoreLiked) {
@@ -222,6 +272,12 @@ const LibraryPage = () => {
           </div>
         </section>
 
+        {publishSuccess && (
+          <div className="rounded-2xl bg-[#e7f6ec] border border-[#bfe6cb] px-5 py-3 text-sm font-bold text-[#1f7a43]">
+            {publishSuccess}
+          </div>
+        )}
+
         {loading && <p className="text-[#5a6595]">책 목록을 불러오는 중...</p>}
 
         {!loading && (
@@ -257,31 +313,54 @@ const LibraryPage = () => {
 
               {visibleBooks.map((book) => {
                 const progress = progressByStatus[book.status];
+                const showPublish = activeTab === "completed" && book.status === "COMPLETED";
                 return (
-                  <Link key={book.bookId} to={`/book/${book.bookId}`} className="rounded-[32px] overflow-hidden bg-white shadow-sm hover:-translate-y-1 transition-transform">
-                    <div className="aspect-[4/3] bg-[#dde2f6]">
-                      {book.coverImageUrl ? (
-                        <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[#a6b0db]">
-                          <ImageIcon size={30} />
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-5 space-y-3.5">
-                      <h4 className="text-[30px] leading-tight font-bold text-[#1e2e66] truncate">{book.title}</h4>
-                      <p className="text-sm text-[#6673a8]">{book.authorName} · {statusLabel[book.status]}</p>
-                      <div className="space-y-1.5">
-                        <div className="flex justify-between text-[11px] font-bold text-[#4d5fb7]">
-                          <span>진행률</span>
-                          <span>{progress}%</span>
-                        </div>
-                        <div className="h-2 rounded-full bg-[#e6e9f7] overflow-hidden">
-                          <div className="h-full bg-[#576bd0]" style={{ width: `${progress}%` }} />
+                  <div key={book.bookId} className="flex flex-col rounded-[32px] overflow-hidden bg-white shadow-sm hover:-translate-y-1 transition-transform">
+                    <Link to={`/book/${book.bookId}`} className="block">
+                      <div className="aspect-[4/3] bg-[#dde2f6]">
+                        {book.coverImageUrl ? (
+                          <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[#a6b0db]">
+                            <ImageIcon size={30} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-5 space-y-3.5">
+                        <h4 className="text-[30px] leading-tight font-bold text-[#1e2e66] truncate">{book.title}</h4>
+                        <p className="text-sm text-[#6673a8]">{book.authorName} · {statusLabel[book.status]}</p>
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-[11px] font-bold text-[#4d5fb7]">
+                            <span>진행률</span>
+                            <span>{progress}%</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-[#e6e9f7] overflow-hidden">
+                            <div className="h-full bg-[#576bd0]" style={{ width: `${progress}%` }} />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+
+                    {showPublish && (
+                      <div className="px-5 pb-5">
+                        {book.visibility === "PAID" ? (
+                          <div className="inline-flex items-center gap-1.5 rounded-full bg-[#eef0fb] px-4 py-2 text-sm font-bold text-[#4862d3]">
+                            <Coins size={16} />
+                            유료 출판됨
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => openPublishModal(book)}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-[#6f82dc] hover:bg-[#6074d0] px-4 py-2 text-sm font-bold text-white shadow-sm"
+                          >
+                            <Coins size={16} />
+                            유료 출판
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
 
@@ -343,6 +422,78 @@ const LibraryPage = () => {
           </>
         )}
       </div>
+
+      {publishTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onClick={closePublishModal}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl bg-white p-7 shadow-xl space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <h3 className="text-2xl font-extrabold text-[#1e2e66]">유료 출판</h3>
+                <p className="text-sm text-[#6673a8]">'{publishTarget.title}'을(를) 유료로 출판합니다.</p>
+              </div>
+              <button
+                type="button"
+                onClick={closePublishModal}
+                disabled={publishing}
+                className="text-[#9aa3cf] hover:text-[#5a6595] disabled:opacity-50"
+                aria-label="닫기"
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="paid-price" className="block text-sm font-bold text-[#2d3f80]">
+                가격 (원)
+              </label>
+              <input
+                id="paid-price"
+                type="number"
+                min={1}
+                step={1}
+                inputMode="numeric"
+                value={priceInput}
+                onChange={(e) => setPriceInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void handleConfirmPublish();
+                }}
+                placeholder="예: 3000"
+                autoFocus
+                className="w-full rounded-xl border border-[#d9dff7] px-4 py-3 text-[#1e2e66] font-bold outline-none focus:border-[#6f82dc]"
+              />
+              <p className="text-xs text-[#8a93c0]">1 이상의 정수만 입력할 수 있어요.</p>
+            </div>
+
+            {publishError && <p className="text-sm font-bold text-red-600">{publishError}</p>}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={closePublishModal}
+                disabled={publishing}
+                className="px-5 py-2.5 rounded-full border border-[#d9dff7] text-sm font-bold text-[#2d3f80] disabled:opacity-60"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleConfirmPublish()}
+                disabled={publishing}
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#6f82dc] hover:bg-[#6074d0] text-sm font-bold text-white shadow-sm disabled:opacity-60"
+              >
+                <Coins size={16} />
+                {publishing ? "출판 중..." : "출판하기"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
