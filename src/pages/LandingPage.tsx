@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, Flame, Clock3, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, Flame, Clock3, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { fetchBanners, fetchBestsellers, fetchBooks, fetchCategories, type BannerItem, type BestsellerItem, type BookItem, type CategoryItem } from "../lib/api";
 import { isLoggedIn, fetchUserMe, removeAccessToken, clearUserCache } from "../lib/auth";
 
@@ -141,14 +141,20 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false, more
               className="group shrink-0 w-[44vw] sm:w-[30vw] md:w-[220px] lg:w-[260px] snap-start transition-transform duration-300 hover:-translate-y-1"
             >
               <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-md mb-3 bg-surface-container-lowest">
-                <img
-                  src={book.coverImageUrl}
-                  alt={book.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                  decoding="async"
-                  referrerPolicy="no-referrer"
-                />
+                {book.coverImageUrl ? (
+                  <img
+                    src={book.coverImageUrl}
+                    alt={book.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-on-surface-variant/40">
+                    <BookOpen size={36} />
+                  </div>
+                )}
                 {rank !== null && (
                   <div
                     className={`absolute top-2 left-2 flex items-center justify-center w-9 h-9 md:w-11 md:h-11 rounded-lg font-headline font-black text-lg md:text-xl shadow-lg ${

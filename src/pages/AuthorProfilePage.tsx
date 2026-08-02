@@ -275,13 +275,19 @@ const AuthorProfilePage = () => {
                 >
                   <Link to={`/book/${book.bookId}`} className="block space-y-3">
                     <div className="relative aspect-[3/4] rounded-2xl overflow-hidden book-shadow group-hover:-translate-y-1 transition-transform duration-500">
-                      <img
-                        src={book.coverImageUrl}
-                        alt={book.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
+                      {book.coverImageUrl ? (
+                        <img
+                          src={book.coverImageUrl}
+                          alt={book.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-surface-container text-on-surface-variant/50">
+                          <BookOpen size={36} />
+                        </div>
+                      )}
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-bold text-on-surface truncate group-hover:text-primary transition-colors">{book.title}</h3>

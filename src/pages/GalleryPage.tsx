@@ -116,7 +116,7 @@ const GalleryPage = () => {
       result = result.filter(
         (book) =>
           book.title.toLowerCase().includes(normalized) ||
-          book.authorName.toLowerCase().includes(normalized)
+          (book.authorName ?? "").toLowerCase().includes(normalized)
       );
     }
 
@@ -279,14 +279,20 @@ const GalleryPage = () => {
                       to={`/book/${book.bookId}`}
                       className="absolute inset-0 rounded-2xl overflow-hidden book-shadow"
                     >
-                      <img
-                        src={book.coverImageUrl}
-                        alt={book.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                      />
+                      {book.coverImageUrl ? (
+                        <img
+                          src={book.coverImageUrl}
+                          alt={book.title}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-surface-container text-on-surface-variant/50">
+                          <BookOpen size={40} />
+                        </div>
+                      )}
 
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
                         <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary scale-0 group-hover:scale-100 transition-transform duration-500">

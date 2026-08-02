@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, BookOpen, Users, Flag, X, Star, Pencil, Trash2, MessageCircle, Heart, UserPlus, UserCheck, FileDown } from "lucide-react";
+import { Sparkles, BookOpen, Users, Flag, X, Star, Pencil, Trash2, MessageCircle, Heart, UserPlus, UserCheck } from "lucide-react";
 import {
   addBookLike,
   createBookReview,
@@ -31,22 +31,6 @@ const reportReasons: ReadonlyArray<{ label: string; value: ReportReason }> = [
 ];
 
 const REVIEW_PAGE_SIZE = 10;
-
-const escapeHtml = (value: string) =>
-  value.replace(/[&<>"']/g, (char) => {
-    switch (char) {
-      case "&":
-        return "&amp;";
-      case "<":
-        return "&lt;";
-      case ">":
-        return "&gt;";
-      case '"':
-        return "&quot;";
-      default:
-        return "&#39;";
-    }
-  });
 
 const BookDetailPage = () => {
   const navigate = useNavigate();
@@ -307,91 +291,6 @@ const BookDetailPage = () => {
     }
   };
 
-  const handleExportPdf = () => {
-    if (!book) return;
-
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      alert("팝업이 차단되었습니다. 브라우저 팝업을 허용해주세요.");
-      return;
-    }
-
-    const pagesHtml = book.pages
-      .map(
-        (page) => `
-          <section class="page">
-            ${page.imageUrl ? `<img class="page-img" src="${page.imageUrl}" alt="" />` : ""}
-            <div class="page-no">${page.pageNumber} 페이지</div>
-            <p class="page-text">${escapeHtml(page.content)}</p>
-          </section>`
-      )
-      .join("");
-
-    const charactersHtml = book.characters.length
-      ? `<section class="block">
-          <h2>등장인물</h2>
-          ${book.characters
-            .map(
-              (character) =>
-                `<div class="character"><strong>${escapeHtml(character.name)}</strong><span>${escapeHtml(
-                  character.description
-                )}</span></div>`
-            )
-            .join("")}
-        </section>`
-      : "";
-
-    const html = `<!DOCTYPE html>
-      <html lang="ko">
-        <head>
-          <meta charset="utf-8" />
-          <meta name="referrer" content="no-referrer" />
-          <title>${escapeHtml(book.title)}</title>
-          <style>
-            * { box-sizing: border-box; }
-            body { font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif; color: #1c1b1f; margin: 0; padding: 40px; }
-            .cover { text-align: center; page-break-after: always; }
-            .cover img { width: 320px; max-width: 70%; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-            .cover h1 { font-size: 32px; margin: 28px 0 8px; }
-            .cover .author { color: #555; font-size: 16px; }
-            .block { margin: 32px 0; }
-            .block h2 { font-size: 22px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
-            .desc { line-height: 1.7; font-size: 15px; white-space: pre-wrap; }
-            .character { margin: 12px 0; }
-            .character strong { display: block; font-size: 16px; }
-            .character span { color: #555; font-size: 14px; }
-            .page { page-break-inside: avoid; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
-            .page-img { width: 100%; max-width: 520px; border-radius: 12px; display: block; margin: 0 auto 12px; }
-            .page-no { color: #6750a4; font-weight: 700; font-size: 13px; margin-bottom: 6px; }
-            .page-text { line-height: 1.8; font-size: 15px; white-space: pre-wrap; margin: 0; }
-            @media print { body { padding: 0; } }
-          </style>
-        </head>
-        <body>
-          <div class="cover">
-            <img src="${book.coverImageUrl}" alt="" />
-            <h1>${escapeHtml(book.title)}</h1>
-            <div class="author">${escapeHtml(book.authorName)} 작가</div>
-          </div>
-          <section class="block">
-            <h2>이야기 소개</h2>
-            <p class="desc">${escapeHtml(book.description)}</p>
-          </section>
-          ${charactersHtml}
-          ${pagesHtml ? `<section class="block"><h2>미리보기</h2>${pagesHtml}</section>` : ""}
-          <script>
-            window.addEventListener("load", function () {
-              setTimeout(function () { window.focus(); window.print(); }, 400);
-            });
-          </script>
-        </body>
-      </html>`;
-
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
-  };
-
   const renderFollowButton = () => (
     <div className="relative inline-flex group">
       <button
@@ -504,15 +403,21 @@ const BookDetailPage = () => {
                   animate={{ opacity: 1, x: 0 }}
                   className="w-[150px] md:w-full aspect-[3/4] rounded-2xl md:rounded-3xl overflow-hidden book-shadow flex-shrink-0"
                 >
-                  <img
-                    src={book.coverImageUrl}
-                    alt={book.title}
-                    className="w-full h-full object-cover"
-                    loading="eager"
-                    fetchPriority="high"
-                    decoding="async"
-                    referrerPolicy="no-referrer"
-                  />
+                  {book.coverImageUrl ? (
+                    <img
+                      src={book.coverImageUrl}
+                      alt={book.title}
+                      className="w-full h-full object-cover"
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-surface-container text-on-surface-variant/50">
+                      <BookOpen size={44} />
+                    </div>
+                  )}
                 </motion.div>
 
                 <div className="flex-grow md:hidden pt-1">
